@@ -131,24 +131,24 @@ class MAClimate(ClimateEntity):
         """Handle updated status from the thermostat."""
 
         match status.operation_mode:
-            case MAOperationMode.HEAT | MAOperationMode.DRY:
-                self._attr_min_temp = status.min_heat_temperature
-                self._attr_max_temp = status.max_heat_temperature
-                self._attr_target_temperature = status.heat_setpoint
-                self._attr_target_temperature_high = None
-                self._attr_target_temperature_low = None
-            case MAOperationMode.COOL:
-                self._attr_min_temp = status.min_cool_temperature
-                self._attr_max_temp = status.max_cool_temperature
-                self._attr_target_temperature = status.cool_setpoint
-                self._attr_target_temperature_high = None
-                self._attr_target_temperature_low = None
             case MAOperationMode.AUTO:
                 self._attr_min_temp = status.min_cool_temperature
                 self._attr_max_temp = status.max_heat_temperature
                 self._attr_target_temperature = None
                 self._attr_target_temperature_high = status.cool_setpoint
                 self._attr_target_temperature_low = status.heat_setpoint
+            case MAOperationMode.HEAT:
+                self._attr_min_temp = status.min_heat_temperature
+                self._attr_max_temp = status.max_heat_temperature
+                self._attr_target_temperature = status.heat_setpoint
+                self._attr_target_temperature_high = None
+                self._attr_target_temperature_low = None
+            case MAOperationMode.COOL | MAOperationMode.DRY:
+                self._attr_min_temp = status.min_cool_temperature
+                self._attr_max_temp = status.max_cool_temperature
+                self._attr_target_temperature = status.cool_setpoint
+                self._attr_target_temperature_high = None
+                self._attr_target_temperature_low = None
             case _:
                 self._attr_target_temperature = None
                 self._attr_target_temperature_high = None
@@ -161,6 +161,7 @@ class MAClimate(ClimateEntity):
         self._attr_swing_mode = SWING_ON if status.vane_mode is MAVaneMode.SWING else SWING_OFF
 
         self._attr_available = True
+        
         self.async_write_ha_state()
 
     def _get_current_hvac_action(self) -> HVACAction:
@@ -177,7 +178,7 @@ class MAClimate(ClimateEntity):
             case MAOperationMode.COOL:
                 return HVACAction.COOLING if self._thermostat.status.room_temperature >= self._thermostat.status.cool_setpoint else HVACAction.IDLE
             case MAOperationMode.DRY:
-                return HVACAction.DRYING if self._thermostat.status.room_temperature >= self._thermostat.status.heat_setpoint else HVACAction.IDLE
+                return HVACAction.DRYING if self._thermostat.status.room_temperature >= self._thermostat.status.cool_setpoint else HVACAction.IDLE
             case _:
                 return HVACAction.IDLE
 
@@ -188,11 +189,11 @@ class MAClimate(ClimateEntity):
             temperature: float | None    
             if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
                 match self._attr_hvac_mode:
-                    case HVACMode.HEAT | HVACMode.DRY:
+                    case HVACMode.HEAT:
                         async with self._thermostat:
                             await self._thermostat.async_set_heat_setpoint(temperature)
                             await self._thermostat.async_get_status()
-                    case HVACMode.COOL:
+                    case HVACMode.COOL | HVACMode.DRY:
                         async with self._thermostat:
                             await self._thermostat.async_set_cool_setpoint(temperature)
                             await self._thermostat.async_get_status()
@@ -207,20 +208,19 @@ class MAClimate(ClimateEntity):
                     await self._thermostat.async_set_cool_setpoint(temperature)
                     await self._thermostat.async_get_status()
         except MAException as ex:
-            _LOGGER.error("[%s] Failed to set temperature", self._ma_config.mac_address)
-            raise ServiceValidationError("Failed to set temperature") from ex
+            raise ServiceValidationError(f"Failed to set temperature: {ex}") from ex
         except ValueError as ex:
             raise ServiceValidationError("Invalid temperature") from ex
     
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new target hvac mode."""
+        """Set new target HVAC mode."""
 
         try:
             async with self._thermostat:
                 await self._thermostat.async_set_operation_mode(HA_TO_MA_HVAC[hvac_mode])
                 await self._thermostat.async_get_status()
         except MAException as ex:
-            _LOGGER.error(f"[%s] Failed to set HVAC mode: {ex}", self._ma_config.mac_address)
+            raise ServiceValidationError(f"Failed to set HVAC mode: {ex}") from ex
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
@@ -230,7 +230,7 @@ class MAClimate(ClimateEntity):
                 await self._thermostat.async_set_fan_mode(HA_TO_MA_FAN[fan_mode])
                 await self._thermostat.async_get_status()
         except MAException:
-            _LOGGER.error("[%s] Failed to set fan mode", self._ma_config.mac_address)
+            raise ServiceValidationError(f"Failed to set fan mode: {ex}") from ex
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
@@ -240,7 +240,7 @@ class MAClimate(ClimateEntity):
                 await self._thermostat.async_set_vane_mode(MAVaneMode.SWING if swing_mode == SWING_ON else MAVaneMode.AUTO)
                 await self._thermostat.async_get_status()
         except MAException:
-            _LOGGER.error("[%s] Failed to set swing mode", self._ma_config.mac_address)
+            raise ServiceValidationError(f"Failed to set swing mode: {ex}") from ex
    
     @property
     def available(self) -> bool:

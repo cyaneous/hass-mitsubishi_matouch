@@ -248,6 +248,7 @@ class Thermostat:
             MARequestException: If an error occurs while sending the command.
             MATimeoutException: If the command times out.
             MAAlreadyAwaitingResponseException: If a status command is already pending.
+            MAResponseException: If the status update response was invalid.
         """
 
         response_bytes = await self._async_write_request(_MAStatusRequest(message_type=_MAMessageType.STATUS_REQUEST, request_flag=0x00))
