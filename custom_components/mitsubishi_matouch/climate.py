@@ -56,6 +56,7 @@ class MAClimate(ClimateEntity):
     _attr_entity_has_name = True
     _attr_name = None
     _attr_should_poll = False
+
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -63,26 +64,24 @@ class MAClimate(ClimateEntity):
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.TURN_OFF
     )
-    _attr_available = False
+    _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = MA_MIN_TEMP
     _attr_max_temp = MA_MAX_TEMP
-    _attr_precision = PRECISION_HALVES
     _attr_hvac_modes = list(HA_TO_MA_HVAC.keys())
+    _attr_fan_modes = list(HA_TO_MA_FAN.keys())
+    _attr_swing_modes = [SWING_ON, SWING_OFF]
+
+    _attr_available = False
     _attr_hvac_mode: HVACMode | None = None
     _attr_hvac_action: HVACAction | None = None
     _attr_target_temperature: float | None = None
     _attr_target_temperature_high: float | None = None
     _attr_target_temperature_low: float | None = None
     _attr_fan_mode: str | None = None
-    _attr_fan_modes = list(HA_TO_MA_FAN.keys())
-    _attr_swing_modes = [SWING_ON, SWING_OFF]
     _attr_swing_mode: str | None = None
 
-    def __init__(
-        self,
-        entry: MAConfigEntry,
-    ) -> None:
+    def __init__(self, entry: MAConfigEntry) -> None:
         """Initialize the MA Touch entity."""
 
         self._ma_config = entry.runtime_data.ma_config

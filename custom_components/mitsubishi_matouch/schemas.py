@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_MAC, CONF_PIN
 from homeassistant.helpers import config_validation as cv
 
+
 SCHEMA_USER = vol.Schema(
     {
         vol.Required(CONF_MAC): str,

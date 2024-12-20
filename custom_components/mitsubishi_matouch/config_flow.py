@@ -19,9 +19,7 @@ class MAConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovery_info: BluetoothServiceInfoBleak | None = None
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         errors: dict[str, str] = {}
@@ -48,12 +46,10 @@ class MAConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=f"MA Touch {mac_address}",
-            data={"pin": pin},
+            data={"mac_address": mac_address, "pin": pin},
         )
 
-    async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfoBleak
-    ) -> ConfigFlowResult:
+    async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfoBleak) -> ConfigFlowResult:
         """Handle bluetooth discovery."""
 
         self._discovery_info = discovery_info
@@ -65,9 +61,7 @@ class MAConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_bluetooth_confirm()
 
-    async def async_step_bluetooth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_bluetooth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle flow start."""
 
         mac_address = self._discovery_info.address
@@ -95,7 +89,7 @@ class MAConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=self._discovery_info.name or mac_address,
+            title=self._discovery_info.name or f"MA Touch {mac_address}",
             data={"pin": pin},
         )
 

@@ -48,9 +48,7 @@ from .exceptions import (
     MAStateException,
     MATimeoutException,
 )
-from .models import (
-    Status
-)
+from .models import Status
 
 __all__ = ["Thermostat"]
 
@@ -371,10 +369,7 @@ class Thermostat:
             MAResponseException: If the fan_mode is invalid.
         """
 
-        await self._async_write_control_request(
-            flags_c=0x01,
-            fan_mode=fan_mode
-        )
+        await self._async_write_control_request(flags_c=0x01, fan_mode=fan_mode)
 
     async def async_set_vane_mode(self, vane_mode: MAVaneMode) -> None:
         """Set the vane mode.
@@ -390,10 +385,7 @@ class Thermostat:
             MAResponseException: If the vane_mode is invalid.
         """
 
-        await self._async_write_control_request(
-            flags_c=0x02,
-            vane_mode=vane_mode
-        )
+        await self._async_write_control_request(flags_c=0x02, vane_mode=vane_mode)
 
     ### Internal ###
 
@@ -454,10 +446,7 @@ class Thermostat:
     async def _async_read_char_str(self, uuid: str) -> str:
         return "".join(map(chr, await self._async_read_char(uuid)))
 
-    async def _async_read_char(
-        self,
-        uuid: str
-    ) -> bytearray:
+    async def _async_read_char(self, uuid: str) -> bytearray:
         """Read a device characteristic.
 
         Args:
@@ -581,9 +570,7 @@ class Thermostat:
         _LOGGER.debug("[%s] Disconnected.", self._mac_address)
         asyncio.create_task(self._trigger_event(MAEvent.DISCONNECTED))
 
-    async def _on_message_received(
-        self, _: BleakGATTCharacteristic, data: bytearray
-    ) -> None:
+    async def _on_message_received(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         """Handle received messages from the thermostat."""
 
         _LOGGER.debug("[%s] RCV: %s", self._mac_address, data.hex())
@@ -720,9 +707,6 @@ class Thermostat:
         ]
 
         args: (
-            #tuple[DeviceData, Status]
-            #| tuple[DeviceData]
-            #|
             tuple[Status]
             | tuple[[]]
         )
@@ -739,9 +723,7 @@ class Thermostat:
                     )
                 args = [status]
 
-        await asyncio.gather(
-            *[callback(*args) for callback in async_callbacks]
-        )
+        await asyncio.gather(*[callback(*args) for callback in async_callbacks])
 
         for callback in sync_callbacks:
             callback(*args)

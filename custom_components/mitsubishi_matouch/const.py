@@ -13,6 +13,7 @@ from homeassistant.components.climate.const import (
     FAN_OFF,
 )
 
+
 DOMAIN = "mitsubishi_matouch"
 
 MANUFACTURER = "Mitsubishi Electric"

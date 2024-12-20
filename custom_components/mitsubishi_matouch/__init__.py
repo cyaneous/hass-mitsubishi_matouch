@@ -22,7 +22,6 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-
 type MAConfigEntry = ConfigEntry[MAConfigEntryData]
 
 
