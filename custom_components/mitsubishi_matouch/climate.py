@@ -82,7 +82,6 @@ class MAClimate(ClimateEntity):
     def __init__(
         self,
         entry: MAConfigEntry,
-        unique_id_key: str | None = None,
     ) -> None:
         """Initialize the MA Touch entity."""
 
