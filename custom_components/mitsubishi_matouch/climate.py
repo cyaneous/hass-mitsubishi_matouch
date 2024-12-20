@@ -34,7 +34,6 @@ from .const import (
     MA_TO_HA_FAN,
     HA_TO_MA_FAN,
 )
-from .btmatouch.models import Status
 
 _LOGGER = logging.getLogger(__name__)
 
