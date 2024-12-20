@@ -1,0 +1,6 @@
+{
+  "name": "Mitsubishi MA Touch",
+  "homeassistant": "2024.10.0",
+  "domains": ["climate"],
+  "render_readme": true,
+}

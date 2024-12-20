@@ -1,0 +1,27 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "flow_title": "Mitsubishi MA Touch {mac}",
+    "step": {
+      "user": {
+        "title": "Configure New Thermostat",
+        "data": {
+          "mac": "MAC address",
+          "pin": "PIN"
+        }
+      },
+      "confirm_bluetooth": {
+        "title": "Configure New Thermostat",
+        "data": {
+          "pin": "PIN"
+        }
+      }
+    },
+    "error": {
+      "invalid_mac_address": "Invalid MAC address",
+      "invalid_pin": "Invalid PIN"
+    }
+  }
+}
