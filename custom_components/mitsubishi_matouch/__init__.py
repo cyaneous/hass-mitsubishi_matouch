@@ -45,9 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     )
 
     if device is None:
-        raise ConfigEntryNotReady(
-            f"MA Touch thermostat '{mac_address}' could not be found"
-        )
+        raise ConfigEntryNotReady(f"MA Touch thermostat '{mac_address}' could not be found")
 
     thermostat = Thermostat(
         mac_address=mac_address,
@@ -73,11 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     """Handle config entry unload."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.thermostat.async_disconnect()
-
-    return unload_ok
-
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 async def update_listener(hass: HomeAssistant, entry: MAConfigEntry) -> None:
     """Handle config entry update."""
@@ -86,7 +80,7 @@ async def update_listener(hass: HomeAssistant, entry: MAConfigEntry) -> None:
 
 
 async def _async_run_thermostat(hass: HomeAssistant, entry: MAConfigEntry) -> None:
-    """Run the thermostat."""
+    """Run the thermostat update loop."""
 
     thermostat = entry.runtime_data.thermostat
     mac_address = entry.runtime_data.ma_config.mac_address
@@ -97,11 +91,7 @@ async def _async_run_thermostat(hass: HomeAssistant, entry: MAConfigEntry) -> No
             async with thermostat:
                 await thermostat.async_get_status()
         except MAException as ex:
-            _LOGGER.error(
-                "[%s] Error updating MA Touch thermostat: %s",
-                mac_address,
-                ex,
-            )
+            _LOGGER.error("[%s] Error updating MA Touch thermostat: %s", mac_address, ex)
             pass
 
         await asyncio.sleep(scan_interval)

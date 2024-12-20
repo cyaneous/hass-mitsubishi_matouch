@@ -164,10 +164,8 @@ class Thermostat:
 
             await self._trigger_event(MAEvent.CONNECTED)
         except BleakError as ex:
-            _LOGGER.error("[%s] Could not connect to the device", self._mac_address)
             raise MAConnectionException("Could not connect to the device") from ex
         except TimeoutError as ex:
-            _LOGGER.error("[%s] Timeout during connection", self._mac_address)
             raise MATimeoutException("Timeout during connection") from ex
 
     async def async_disconnect(self) -> None:
@@ -277,10 +275,7 @@ class Thermostat:
             MAResponseException: If the temperature is invalid.
         """
 
-        await self._async_write_control_request(
-            flags_b=0x01,
-            cool_setpoint=temperature
-        )
+        await self._async_write_control_request(flags_b=0x01, cool_setpoint=temperature)
 
     async def async_set_heat_setpoint(self, temperature: float) -> None:
         """Set the heating setpoint temperature.
@@ -298,10 +293,7 @@ class Thermostat:
             MAResponseException: If the temperature is invalid.
         """
 
-        await self._async_write_control_request(
-            flags_b=0x02,
-            heat_setpoint=temperature
-        )
+        await self._async_write_control_request(flags_b=0x02, heat_setpoint=temperature)
 
     async def async_set_operation_mode(self, operation_mode: MAOperationMode) -> None:
         """Set the operation mode.

@@ -1,6 +1,5 @@
 """Platform for Mitsubishi MA Touch climate entities."""
 
-import logging
 from typing import Any
 
 from .btmatouch.const import MA_MIN_TEMP, MA_MAX_TEMP, MAOperationMode, MAVaneMode
@@ -34,9 +33,6 @@ from .const import (
     MA_TO_HA_FAN,
     HA_TO_MA_FAN,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -86,13 +82,13 @@ class MAClimate(ClimateEntity):
 
         self._ma_config = entry.runtime_data.ma_config
         self._thermostat = entry.runtime_data.thermostat
+        self._attr_unique_id = f"matouch_{format_mac(self._ma_config.mac_address)}"
         self._attr_device_info = DeviceInfo(
             name=f"MA Touch {format_mac(self._ma_config.mac_address)}",
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
             connections={(CONNECTION_BLUETOOTH, self._ma_config.mac_address)},
         )
-        self._attr_unique_id = f"matouch_{format_mac(self._ma_config.mac_address)}"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added to hass."""
