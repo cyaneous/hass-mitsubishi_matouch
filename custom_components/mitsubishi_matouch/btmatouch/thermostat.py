@@ -3,7 +3,6 @@
 import logging
 import asyncio
 from collections import defaultdict
-from datetime import datetime, timedelta
 from types import TracebackType
 from typing import Awaitable, Callable, Literal, Self, Union, overload
 
@@ -11,10 +10,8 @@ from bleak import BleakClient
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
-from construct_typed import DataclassStruct
 from construct import StreamError
 
-from ._adapters import _MATemperature
 from ._structures import (
     _MAStruct,
     _MAMessageHeader,
@@ -89,7 +86,7 @@ class Thermostat:
         self._callbacks: defaultdict[
             MAEvent, list[Union[Callable[..., None], Callable[..., Awaitable[None]]]]
         ] = defaultdict(list)
-        
+
         self._conn: BleakClient = BleakClient( #TODO: hass docs recommend not reusing BleakClient between connections to avoid connection instability?
             self._ble_device,
             disconnected_callback=self._on_disconnected,
@@ -102,7 +99,7 @@ class Thermostat:
         self._message_id = 0
         self._receive_length = 0
         self._receive_buffer = bytes(0)
-    
+
     @property
     def is_connected(self) -> bool:
         """Check if the thermostat is connected.
@@ -156,7 +153,7 @@ class Thermostat:
             await self._conn.start_notify(
                 _MACharacteristic.NOTIFY, self._on_message_received
             )
-            
+
             if self._firmware_version is None or self._software_version is None:
                 self._firmware_version = await self._async_read_char_str(_MACharacteristic.FIRMWARE_VERSION)
                 self._software_version = await self._async_read_char_str(_MACharacteristic.SOFTWARE_VERSION)
@@ -189,7 +186,7 @@ class Thermostat:
 
         try:
             await self._conn.disconnect()
-        except EOFError as ex:
+        except EOFError:
             pass
         except BleakError as ex:
             raise MAConnectionException("Could not disconnect from the device") from ex
@@ -207,13 +204,16 @@ class Thermostat:
             MAResponseException: If the PIN is incorrect.
         """
 
-        await self._async_write_request(_MAAuthenticatedRequest(message_type=_MAMessageType.LOGIN_REQUEST, request_flag=0x01, pin=pin))
+        request = _MAAuthenticatedRequest(message_type=_MAMessageType.LOGIN_REQUEST, request_flag=0x01, pin=pin)
+        await self._async_write_request(request)
 
         # not sure what this does yet, but seems to be required
-        await self._async_write_request(_MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_1, request_flag=0x01, pin=pin))
+        request = _MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_1, request_flag=0x01, pin=pin)
+        await self._async_write_request(request)
 
         # not sure what this does yet, but seems to be required
-        await self._async_write_request(_MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_2, request_flag=0x01, pin=pin))
+        request = _MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_2, request_flag=0x01, pin=pin)
+        await self._async_write_request(request)
 
     async def async_logout(self, pin: int) -> None:
         """Unknown messages at end of connection.
@@ -227,13 +227,16 @@ class Thermostat:
         """
 
         # not sure what this does yet, but seems to be required
-        await self._async_write_request(_MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_3, request_flag=0x01, pin=pin))
+        request = _MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_3, request_flag=0x01, pin=pin)
+        await self._async_write_request(request)
 
         # not sure what this does yet, but seems to be required
-        await self._async_write_request(_MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_4, request_flag=0x01, pin=pin))
+        request = _MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_4, request_flag=0x01, pin=pin)
+        await self._async_write_request(request)
 
         # not sure what this does yet, but seems to be required
-        await self._async_write_request(_MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_5, request_flag=0x01, pin=pin))
+        request = _MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_5, request_flag=0x01, pin=pin)
+        await self._async_write_request(request)
 
     async def async_get_status(self) -> Status:
         """Query the latest status.
@@ -249,7 +252,8 @@ class Thermostat:
             MAResponseException: If the status update response was invalid.
         """
 
-        response_bytes = await self._async_write_request(_MAStatusRequest(message_type=_MAMessageType.STATUS_REQUEST, request_flag=0x00))
+        request = _MAStatusRequest(message_type=_MAMessageType.STATUS_REQUEST, request_flag=0x00)
+        response_bytes = await self._async_write_request(request)
         response = _MAStatusResponse.from_bytes(response_bytes)
         status = Status._from_struct(response)
         _LOGGER.debug("[%s] Status payload: %s", self._mac_address, response_bytes.hex())
@@ -275,7 +279,10 @@ class Thermostat:
             MAResponseException: If the temperature is invalid.
         """
 
-        await self._async_write_control_request(flags_b=0x01, cool_setpoint=temperature)
+        await self._async_write_control_request(
+            flags_b=0x01, 
+            cool_setpoint=temperature
+        )
 
     async def async_set_heat_setpoint(self, temperature: float) -> None:
         """Set the heating setpoint temperature.
@@ -293,7 +300,10 @@ class Thermostat:
             MAResponseException: If the temperature is invalid.
         """
 
-        await self._async_write_control_request(flags_b=0x02, heat_setpoint=temperature)
+        await self._async_write_control_request(
+            flags_b=0x02, 
+            heat_setpoint=temperature
+        )
 
     async def async_set_operation_mode(self, operation_mode: MAOperationMode) -> None:
         """Set the operation mode.
@@ -320,7 +330,7 @@ class Thermostat:
                     flags_a=0x01,
                     operation_mode_flags=_MAOperationModeFlags.POWER|_MAOperationModeFlags.HEAT,
                 )
-                
+
         match operation_mode:
             case MAOperationMode.AUTO:
                 await self._async_write_control_request(
@@ -362,7 +372,10 @@ class Thermostat:
             MAResponseException: If the fan_mode is invalid.
         """
 
-        await self._async_write_control_request(flags_c=0x01, fan_mode=fan_mode)
+        await self._async_write_control_request(
+            flags_c=0x01,
+            fan_mode=fan_mode
+        )
 
     async def async_set_vane_mode(self, vane_mode: MAVaneMode) -> None:
         """Set the vane mode.
@@ -378,7 +391,10 @@ class Thermostat:
             MAResponseException: If the vane_mode is invalid.
         """
 
-        await self._async_write_control_request(flags_c=0x02, vane_mode=vane_mode)
+        await self._async_write_control_request(
+            flags_c=0x02, 
+            vane_mode=vane_mode
+        )
 
     ### Internal ###
 
@@ -486,7 +502,7 @@ class Thermostat:
             raise MAAlreadyAwaitingResponseException(
                 "Already awaiting a command response"
             )
-        
+
         # TODO: clean this up
         payload = request.to_bytes()
         message = _MAMessageHeader(length=(1 + len(payload) + 2), message_id=self._message_id).to_bytes()
@@ -532,7 +548,17 @@ class Thermostat:
         finally:
             self._response_future = None
 
-    async def _async_write_control_request(self, flags_a: int = 0, flags_b: int = 0, flags_c: int = 0, operation_mode_flags: _MAOperationModeFlags = _MAOperationModeFlags.NONE, cool_setpoint: float = 0, heat_setpoint: float = 0, fan_mode: MAFanMode = MAFanMode.NONE, vane_mode: MAVaneMode = MAVaneMode.NONE) -> None:
+    async def _async_write_control_request(
+        self,
+        flags_a: int = 0,
+        flags_b: int = 0,
+        flags_c: int = 0,
+        operation_mode_flags: _MAOperationModeFlags = _MAOperationModeFlags.NONE, 
+        cool_setpoint: float = 0,
+        heat_setpoint: float = 0,
+        fan_mode: MAFanMode = MAFanMode.NONE,
+        vane_mode: MAVaneMode = MAVaneMode.NONE
+    ) -> None:
         request = _MAControlRequest(
             message_type=_MAMessageType.CONTROL_REQUEST,
             request_flag=0x01,
@@ -550,7 +576,7 @@ class Thermostat:
 
         response_bytes = await self._async_write_request(request)
         response = _MAControlResponse.from_bytes(response_bytes)
-        # TODO: do something here?
+        # TODO: do something here with the result?
 
     def _crc_sum(self, frame: bytes) -> int:
         """Calculate frame CRC."""
@@ -586,7 +612,7 @@ class Thermostat:
         self._receive_length = 0
         payload = self._receive_buffer[1:-2]
         crc = self._receive_buffer[:2]
-        
+
         # TODO: check checksum
 
         if self._response_future is not None:
@@ -701,7 +727,7 @@ class Thermostat:
 
         args: (
             tuple[Status]
-            | tuple[[]]
+            | tuple[()]
         )
 
         match event:

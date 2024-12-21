@@ -4,15 +4,15 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
-from .btmatouch.thermostat import Thermostat
-from .btmatouch.exceptions import MAException
-
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from .btmatouch.thermostat import Thermostat
+from .btmatouch.exceptions import MAException
 
 from .models import MAConfig, MAConfigEntryData
 
@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    
+
     entry.async_create_background_task(
         hass, _async_run_thermostat(hass, entry), entry.entry_id
     )
@@ -92,6 +92,5 @@ async def _async_run_thermostat(hass: HomeAssistant, entry: MAConfigEntry) -> No
                 await thermostat.async_get_status()
         except MAException as ex:
             _LOGGER.error("[%s] Error updating MA Touch thermostat: %s", mac_address, ex)
-            pass
 
         await asyncio.sleep(scan_interval)

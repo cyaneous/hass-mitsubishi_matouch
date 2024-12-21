@@ -1,9 +1,5 @@
 """Constants for the Mitsubishi MA Touch integration."""
 
-from enum import Enum
-
-from .btmatouch.const import MAOperationMode, MAFanMode
-
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -13,6 +9,7 @@ from homeassistant.components.climate.const import (
     FAN_OFF,
 )
 
+from .btmatouch.const import MAOperationMode, MAFanMode
 
 DOMAIN = "mitsubishi_matouch"
 

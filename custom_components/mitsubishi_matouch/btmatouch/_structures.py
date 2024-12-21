@@ -1,7 +1,6 @@
 """Structures for the Mitsubishi MA Touch Thermostat."""
 
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
 from typing import Self
 
 from construct import (
@@ -105,10 +104,7 @@ class _MAStatusRequest(_MARequest):
 
 @dataclass
 class _MAStatusResponse(_MAResponse):
-    """Thermostat status response.
-
-    00 00 32 10 03 60 01 90 02 00 01 10 03 60 01 10 03 80 01 90 02 60 01 40 02 10 02 90 01 40 02 90 01 40 06 00 00 00 00 00 20 02 01 00 10 04
-    """
+    """Thermostat status response."""
 
     unknown_3: int = csfield(Int8un)
     unknown_4: int = csfield(Int8un)
@@ -162,7 +158,7 @@ class _MAControlRequest(_MARequest):
     vane auto:  00 00 02 11 4502 1002 9001 4002 9001 6400 00
     vane swing: 00 00 02 11 4502 1002 9001 4002 9001 7400 00 <-- so 7 is vane, 4 is fan
     """
-    
+
     flags_a: int = csfield(Int8un)
     flags_b: int = csfield(Int8un)
     flags_c: int = csfield(Int8un)
@@ -186,4 +182,3 @@ class _MAControlResponse(_MAResponse):
 
     unknown_1: int = csfield(Int8un)
     unknown_2: int = csfield(Int8un)
-

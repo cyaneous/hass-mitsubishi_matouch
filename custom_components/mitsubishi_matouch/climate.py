@@ -2,13 +2,7 @@
 
 from typing import Any
 
-from .btmatouch.const import MA_MIN_TEMP, MA_MAX_TEMP, MAOperationMode, MAVaneMode
-from .btmatouch.exceptions import MAException
-from .btmatouch.const import MAEvent
-from .btmatouch.models import Status
-
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
@@ -19,10 +13,14 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import SWING_ON, SWING_OFF
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .btmatouch.const import MA_MIN_TEMP, MA_MAX_TEMP, MAOperationMode, MAVaneMode
+from .btmatouch.exceptions import MAException
+from .btmatouch.const import MAEvent
+from .btmatouch.models import Status
 
 from . import MAConfigEntry
 from .const import (

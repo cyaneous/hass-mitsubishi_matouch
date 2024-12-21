@@ -1,7 +1,5 @@
 """Adapters for the btmatouch library."""
 
-from datetime import datetime, time, timedelta
-
 from construct_typed import Adapter, Context
 
 __all__: list[str] = []
@@ -23,4 +21,3 @@ class _MATemperature(Adapter[bytes, bytes, float, float]):
     @classmethod
     def decode(cls, value: bytes) -> float:
         return float(bytes(reversed(value)).hex())/10
-

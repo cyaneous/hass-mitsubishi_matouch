@@ -1,7 +1,6 @@
 """Constants for the btmatouch library."""
 
 from enum import IntEnum, StrEnum, auto
-from typing import Self
 
 from construct_typed import EnumBase, FlagsEnumBase
 
@@ -53,11 +52,11 @@ class MAFanMode(EnumBase):
     """Fan mode enumeration."""
 
     NONE = 0x00
-    QUIET = (0 << 4)
-    LOW = (1 << 4)
-    MEDIUM = (2 << 4)
-    HIGH = (3 << 4)
-    AUTO = (4 << 4)
+    QUIET = 0 << 4
+    LOW = 1 << 4
+    MEDIUM = 2 << 4
+    HIGH = 3 << 4
+    AUTO = 4 << 4
 
 
 class MAVaneMode(EnumBase):
@@ -105,18 +104,18 @@ class _MAResult(EnumBase):
 
 class _MAOperationModeFlags(FlagsEnumBase):
     """Operation mode flags."""
-    
+
     NONE = 0x00
-    POWER = (1 << 0)
-    FAN = (1 << 1)
-    COOL = (1 << 3)
-    HEAT = (1 << 4)
-    DRY = (1 << 5)
-    AUTO = (1 << 6)
+    POWER = 1 << 0
+    FAN = 1 << 1
+    COOL = 1 << 3
+    HEAT = 1 << 4
+    DRY = 1 << 5
+    AUTO = 1 << 6
 
 
 class _MAOtherFlags(FlagsEnumBase):
     """Other flags."""
 
-    TEMP_RESTRICT = (1 << 2)
-    POWER = (1 << 4)
+    TEMP_RESTRICT = 1 << 2
+    POWER = 1 << 4
