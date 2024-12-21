@@ -73,6 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
+
 async def update_listener(hass: HomeAssistant, entry: MAConfigEntry) -> None:
     """Handle config entry update."""
 
