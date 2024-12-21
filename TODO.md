@@ -1,6 +1,5 @@
 # TODO
 
-- use big endian for some fields???
 - report unavailable if we havent been able to connect x number of times/seconds or minutes since last time
 - use a data update coordinator?
 
