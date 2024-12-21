@@ -49,6 +49,7 @@ class Status(_BaseModel[_MAStatusResponse]):
     min_heat_temperature: float
     cool_setpoint: float
     heat_setpoint: float
+    auto_setpoint: float
     room_temperature: float
     fan_mode: MAFanMode
     vane_mode: MAVaneMode
@@ -62,6 +63,8 @@ class Status(_BaseModel[_MAStatusResponse]):
             min_cool_temperature=struct.min_cool_temperature,
             max_heat_temperature=struct.max_heat_temperature,
             min_heat_temperature=struct.min_heat_temperature,
+            max_auto_temperature=struct.max_auto_temperature,
+            min_auto_temperature=struct.min_auto_temperature,
             cool_setpoint=struct.cool_setpoint,
             heat_setpoint=struct.heat_setpoint,
             room_temperature=struct.room_temperature,

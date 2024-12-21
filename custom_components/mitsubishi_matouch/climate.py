@@ -126,8 +126,8 @@ class MAClimate(ClimateEntity):
 
         match status.operation_mode:
             case MAOperationMode.AUTO:
-                self._attr_min_temp = status.min_cool_temperature
-                self._attr_max_temp = status.max_heat_temperature
+                self._attr_min_temp = status.min_auto_temperature
+                self._attr_max_temp = status.max_auto_temperature
                 self._attr_target_temperature = None
                 self._attr_target_temperature_high = status.cool_setpoint
                 self._attr_target_temperature_low = status.heat_setpoint
@@ -182,12 +182,12 @@ class MAClimate(ClimateEntity):
         try:
             temperature: float | None    
             if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-                match self._attr_hvac_mode:
-                    case HVACMode.HEAT:
+                match self._thermostat.status.operation_mode:
+                    case MAOperationMode.HEAT:
                         async with self._thermostat:
                             await self._thermostat.async_set_heat_setpoint(temperature)
                             await self._thermostat.async_get_status()
-                    case HVACMode.COOL | HVACMode.DRY:
+                    case MAOperationMode.COOL | MAOperationMode.DRY:
                         async with self._thermostat:
                             await self._thermostat.async_set_cool_setpoint(temperature)
                             await self._thermostat.async_get_status()
