@@ -9,18 +9,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .btmatouch.thermostat import Thermostat
 from .btmatouch.exceptions import MAException
 
 from .models import MAConfig, MAConfigEntryData
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS = [
     Platform.CLIMATE,
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 type MAConfigEntry = ConfigEntry[MAConfigEntryData]
 
