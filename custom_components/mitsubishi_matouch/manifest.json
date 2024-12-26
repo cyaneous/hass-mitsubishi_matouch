@@ -1,7 +1,7 @@
 {
   "domain": "mitsubishi_matouch",
   "name": "Mitsubishi MA Touch",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "bluetooth": [
     {
       "service_uuid": "0277df18-e796-11e6-bf01-fe55135034f3",

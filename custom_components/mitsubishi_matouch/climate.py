@@ -10,12 +10,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.climate.const import SWING_ON, SWING_OFF
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.components.climate.const import SWING_ON, SWING_OFF
 
 from .btmatouch.const import MA_MIN_TEMP, MA_MAX_TEMP, MAOperationMode, MAVaneMode
 from .btmatouch.exceptions import MAException
