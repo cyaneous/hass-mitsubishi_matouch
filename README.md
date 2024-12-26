@@ -1,4 +1,4 @@
-# Mitsubishi MA BLE thermostat integration for Home Assistant
+# Mitsubishi MA Touch BLE thermostat integration for Home Assistant
 
 This integration adds support for controlling Mitsubishi MA BLE thermostats. 
 
