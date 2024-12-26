@@ -1,6 +1,5 @@
 {
   "name": "Mitsubishi MA Touch",
   "homeassistant": "2024.12.1",
-  "render_readme": true,
-  "issue_tracker": "https://github.com/cyaneous/mitsubishi_matouch/issues"
+  "render_readme": true
 }
