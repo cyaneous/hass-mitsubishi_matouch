@@ -1,7 +1,6 @@
 {
   "domain": "mitsubishi_matouch",
   "name": "Mitsubishi MA Touch",
-  "version": "0.1.0",
   "bluetooth": [
     {
       "service_uuid": "0277df18-e796-11e6-bf01-fe55135034f3",
@@ -15,5 +14,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["mitsubishi_matouch"],
-  "requirements": ["bleak-esphome==1.1.0"]
+  "requirements": ["bleak-esphome==1.1.0"],
+  "version": "0.1.0"
 }
