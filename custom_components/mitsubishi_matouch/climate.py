@@ -38,12 +38,12 @@ from .const import (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: MAConfigEntry,
+    entry: MAConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Handle config entry setup."""
 
-    coordinator = MACoordinator(hass, config_entry)
+    coordinator = MACoordinator(hass, entry)
 
     # Fetch initial data so we have data when entities subscribe
     #
@@ -187,21 +187,21 @@ class MAClimate(CoordinatorEntity, ClimateEntity):
                     case MAOperationMode.HEAT:
                         async with self._thermostat:
                             await self._thermostat.async_set_heat_setpoint(temperature)
-                        await self.coordinator.async_request_refresh()
+                        await self.coordinator.async_refresh()
                     case MAOperationMode.COOL | MAOperationMode.DRY:
                         async with self._thermostat:
                             await self._thermostat.async_set_cool_setpoint(temperature)
-                        await self.coordinator.async_request_refresh()
+                        await self.coordinator.async_refresh()
                     case _:
                         raise ServiceValidationError("Target setpoint is ambiguous in this mode")
             if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                 async with self._thermostat:
                     await self._thermostat.async_set_heat_setpoint(temperature)
-                await self.coordinator.async_request_refresh()
+                await self.coordinator.async_refresh()
             if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
                 async with self._thermostat:
                     await self._thermostat.async_set_cool_setpoint(temperature)
-                await self.coordinator.async_request_refresh()
+                await self.coordinator.async_refresh()
         except MAException as ex:
             raise ServiceValidationError(f"Failed to set temperature: {ex}") from ex
         except ValueError as ex:
@@ -213,26 +213,26 @@ class MAClimate(CoordinatorEntity, ClimateEntity):
         try:
             async with self._thermostat:
                 await self._thermostat.async_set_operation_mode(HA_TO_MA_HVAC[hvac_mode])
-            await self.coordinator.async_request_refresh()
+            await self.coordinator.async_refresh()
         except MAException as ex:
             raise ServiceValidationError(f"Failed to set HVAC mode: {ex}") from ex
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode) -> None:
         """Set new target fan mode."""
 
         try:
             async with self._thermostat:
                 await self._thermostat.async_set_fan_mode(HA_TO_MA_FAN[fan_mode])
-            await self.coordinator.async_request_refresh()
+            await self.coordinator.async_refresh()
         except MAException as ex:
             raise ServiceValidationError(f"Failed to set fan mode: {ex}") from ex
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode) -> None:
         """Set new target swing operation."""
 
         try:
             async with self._thermostat:
                 await self._thermostat.async_set_vane_mode(MAVaneMode.SWING if swing_mode == SWING_ON else MAVaneMode.AUTO)
-            await self.coordinator.async_request_refresh()
+            await self.coordinator.async_refresh()
         except MAException as ex:
             raise ServiceValidationError(f"Failed to set swing mode: {ex}") from ex

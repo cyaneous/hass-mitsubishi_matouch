@@ -15,11 +15,11 @@ PLATFORMS = [
     Platform.CLIMATE,
 ]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: MAConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     """Handle config entry setup."""
 
-    mac_address: str = config_entry.unique_id
-    pin: str = config_entry.data.get("pin")
+    mac_address: str = entry.unique_id
+    pin: str = entry.data.get("pin")
 
     if TYPE_CHECKING:
         assert mac_address is not None
@@ -43,24 +43,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MAConfigEntry) ->
         ble_device=device
     )
 
-    config_entry.runtime_data = MAConfigEntryRuntimeData(
+    entry.runtime_data = MAConfigEntryRuntimeData(
         ma_config=ma_config,
         thermostat=thermostat
     )
 
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: MAConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     """Handle config entry unload."""
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, config_entry: MAConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: MAConfigEntry) -> None:
     """Handle config entry update."""
 
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
