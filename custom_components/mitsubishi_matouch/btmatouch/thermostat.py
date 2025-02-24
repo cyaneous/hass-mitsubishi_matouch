@@ -71,7 +71,7 @@ class Thermostat:
             connection_timeout (int, optional): The connection timeout in seconds. Defaults to DEFAULT_CONNECTION_TIMEOUT.
             command_timeout (int, optional): The command timeout in seconds. Defaults to DEFAULT_COMMAND_TIMEOUT.
         """
-        
+
         self._mac_address = mac_address
         self._pin = pin
         self._ble_device = ble_device
@@ -80,10 +80,9 @@ class Thermostat:
 
         self._firmware_version: str | None = None
         self._software_version: str | None = None
-        self._last_status: Status | None = None
 
         # TODO: hass docs recommend not reusing BleakClient between connections to avoid connection instability?
-        self._conn: BleakClient = BleakClient( 
+        self._conn: BleakClient = BleakClient(
             self._ble_device,
             disconnected_callback=self._on_disconnected,
             timeout=DEFAULT_CONNECTION_TIMEOUT,
@@ -103,7 +102,7 @@ class Thermostat:
         Returns:
             bool: True if connected, False otherwise.
         """
-        
+
         return self._conn.is_connected
 
     @property
@@ -117,22 +116,6 @@ class Thermostat:
         """Get the thermostat software version."""
 
         return self._software_version
-
-    @property
-    def status(self) -> Status:
-        """Get the last known status, ensuring it's not None.
-
-        Returns:
-            Status: The last known status.
-
-        Raises:
-            MAStateException: If the status is None. This occurs when the thermostat has not been connected yet.
-        """
-
-        # if self._last_status is None:
-        #     raise MAStateException("Status not set")
-
-        return self._last_status
 
     async def async_connect(self) -> None:
         """Connect to the thermostat.
@@ -181,7 +164,7 @@ class Thermostat:
             MAConnectionException: If the disconnection fails.
             MATimeoutException: If the disconnection times out.
         """
-        
+
         if not self.is_connected:
             raise MAStateException("Not connected")
 
@@ -231,7 +214,7 @@ class Thermostat:
             MAAlreadyAwaitingResponseException: If a status command is already pending.
             MAAuthException: If the PIN is incorrect.
         """
-        
+
         # not sure what this does yet, but seems to be required
         request = _MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_3, request_flag=0x01, pin=pin)
         await self._async_write_request(request)
@@ -265,7 +248,6 @@ class Thermostat:
         _LOGGER.debug("[%s] Status payload: %s", self._mac_address, response_bytes.hex())
         _LOGGER.debug("[%s] Status IN: %s", self._mac_address, vars(response))
         #_LOGGER.debug("[%s] Status OUT: %s", self._mac_address, vars(status))
-        self._last_status = status
         return status
 
     async def async_set_cool_setpoint(self, temperature: float) -> None:
@@ -285,7 +267,7 @@ class Thermostat:
         """
 
         await self._async_write_control_request(
-            flags_b=0x01, 
+            flags_b=0x01,
             cool_setpoint=temperature
         )
 
@@ -306,7 +288,7 @@ class Thermostat:
         """
 
         await self._async_write_control_request(
-            flags_b=0x02, 
+            flags_b=0x02,
             heat_setpoint=temperature
         )
 
@@ -397,7 +379,7 @@ class Thermostat:
         """
 
         await self._async_write_control_request(
-            flags_c=0x02, 
+            flags_c=0x02,
             vane_mode=vane_mode
         )
 
@@ -560,7 +542,7 @@ class Thermostat:
         flags_a: int = 0,
         flags_b: int = 0,
         flags_c: int = 0,
-        operation_mode_flags: _MAOperationModeFlags = _MAOperationModeFlags.NONE, 
+        operation_mode_flags: _MAOperationModeFlags = _MAOperationModeFlags.NONE,
         cool_setpoint: float = 0,
         heat_setpoint: float = 0,
         fan_mode: MAFanMode = MAFanMode.NONE,
@@ -583,7 +565,7 @@ class Thermostat:
 
         response_bytes = await self._async_write_request(request)
         response = _MAControlResponse.from_bytes(response_bytes)
-        # TODO: do something here with the result?
+        # TODO: error check for success?
 
     def _crc_sum(self, frame: bytes) -> int:
         """Calculate frame CRC."""

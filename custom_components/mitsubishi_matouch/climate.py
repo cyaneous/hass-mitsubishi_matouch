@@ -60,7 +60,7 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     """Unload a config entry."""
-    
+
     return True
 
 class MAClimate(CoordinatorEntity, ClimateEntity):
@@ -68,8 +68,6 @@ class MAClimate(CoordinatorEntity, ClimateEntity):
 
     _attr_entity_has_name = True
     _attr_name = None
-    #_attr_should_poll = False
-    #_attr_available = False
 
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -155,34 +153,37 @@ class MAClimate(CoordinatorEntity, ClimateEntity):
         self._attr_fan_mode = MA_TO_HA_FAN[status.fan_mode]
         self._attr_swing_mode = SWING_ON if status.vane_mode is MAVaneMode.SWING else SWING_OFF
 
-        #self._attr_available = True
         super()._handle_coordinator_update()
 
     def _get_current_hvac_action(self) -> HVACAction:
         """Return the current hvac action."""
 
-        if self._thermostat.status is None or self._thermostat.status.operation_mode is MAOperationMode.OFF:
+        status = self.coordinator.data
+
+        if status is None or status.operation_mode is MAOperationMode.OFF:
             return HVACAction.OFF
 
-        match self._thermostat.status.operation_mode:
+        match status.operation_mode:
             case MAOperationMode.AUTO:
-                return HVACAction.HEATING if self._thermostat.status.room_temperature <= self._thermostat.status.heat_setpoint else HVACAction.COOLING if self._thermostat.status.room_temperature >= self._thermostat.status.cool_setpoint else HVACAction.IDLE
+                return HVACAction.HEATING if status.room_temperature <= status.heat_setpoint else HVACAction.COOLING if status.room_temperature >= status.cool_setpoint else HVACAction.IDLE
             case MAOperationMode.HEAT:
-                return HVACAction.HEATING if self._thermostat.status.room_temperature <= self._thermostat.status.heat_setpoint else HVACAction.IDLE
+                return HVACAction.HEATING if status.room_temperature <= status.heat_setpoint else HVACAction.IDLE
             case MAOperationMode.COOL:
-                return HVACAction.COOLING if self._thermostat.status.room_temperature >= self._thermostat.status.cool_setpoint else HVACAction.IDLE
+                return HVACAction.COOLING if status.room_temperature >= status.cool_setpoint else HVACAction.IDLE
             case MAOperationMode.DRY:
-                return HVACAction.DRYING if self._thermostat.status.room_temperature >= self._thermostat.status.cool_setpoint else HVACAction.IDLE
+                return HVACAction.DRYING if status.room_temperature >= status.cool_setpoint else HVACAction.IDLE
             case _:
                 return HVACAction.IDLE
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
 
+        status = self.coordinator.data
+
         try:
-            temperature: float | None    
-            if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-                match self._thermostat.status.operation_mode:
+            temperature: float | None
+            if temperature := kwargs.get(ATTR_TEMPERATURE):
+                match status.operation_mode:
                     case MAOperationMode.HEAT:
                         async with self._thermostat:
                             await self._thermostat.async_set_heat_setpoint(temperature)
@@ -193,11 +194,11 @@ class MAClimate(CoordinatorEntity, ClimateEntity):
                         await self.coordinator.async_request_refresh()
                     case _:
                         raise ServiceValidationError("Target setpoint is ambiguous in this mode")
-            if (temperature := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
+            if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                 async with self._thermostat:
                     await self._thermostat.async_set_heat_setpoint(temperature)
                 await self.coordinator.async_request_refresh()
-            if (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
+            if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
                 async with self._thermostat:
                     await self._thermostat.async_set_cool_setpoint(temperature)
                 await self.coordinator.async_request_refresh()
