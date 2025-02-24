@@ -14,7 +14,8 @@ from .btmatouch.const import MAOperationMode, MAFanMode
 DOMAIN = "mitsubishi_matouch"
 
 MANUFACTURER = "Mitsubishi Electric"
-DEVICE_MODEL = "PAR-CT01MAU"
+DEVICE_MODEL = "MA Touch"
+DEVICE_MODEL_ID = "PAR-CT01MAU"
 
 MA_TO_HA_HVAC: dict[MAOperationMode, HVACMode] = {
     MAOperationMode.OFF: HVACMode.OFF,

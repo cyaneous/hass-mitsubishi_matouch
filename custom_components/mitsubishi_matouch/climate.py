@@ -28,6 +28,7 @@ from .coordinator import MACoordinator
 from . import MAConfigEntry
 from .const import (
     DEVICE_MODEL,
+    DEVICE_MODEL_ID,
     MANUFACTURER,
     MA_TO_HA_HVAC,
     HA_TO_MA_HVAC,
@@ -63,7 +64,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
 
     return True
 
-class MAClimate(CoordinatorEntity, ClimateEntity):
+class MAClimate(CoordinatorEntity[MACoordinator], ClimateEntity):
     """Climate entity to represent an MA Touch thermostat."""
 
     _attr_entity_has_name = True
@@ -101,25 +102,18 @@ class MAClimate(CoordinatorEntity, ClimateEntity):
         self._thermostat = coordinator.config_entry.runtime_data.thermostat
         self._attr_unique_id = f"matouch_{format_mac(self._ma_config.mac_address)}"
         self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, self._ma_config.mac_address)},
             name=f"MA Touch {format_mac(self._ma_config.mac_address)}",
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
-            connections={(CONNECTION_BLUETOOTH, self._ma_config.mac_address)},
+            model_id=DEVICE_MODEL_ID,
+            sw_version=self._thermostat.software_version,
+            hw_version=self._thermostat.firmware_version,
         )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-
-        device_registry = dr.async_get(self.hass)
-        if device := device_registry.async_get_device(
-            connections={(CONNECTION_BLUETOOTH, self._ma_config.mac_address)},
-        ):
-            device_registry.async_update_device(
-                device.id,
-                hw_version=self._thermostat.firmware_version,
-                sw_version=self._thermostat.software_version,
-            )
 
         status = self.coordinator.data
 
