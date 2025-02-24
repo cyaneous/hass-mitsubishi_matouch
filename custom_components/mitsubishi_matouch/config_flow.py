@@ -31,8 +31,6 @@ class MAConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         mac_address = format_mac(user_input[CONF_MAC])
-        pin = user_input[CONF_PIN]
-
         if not validate_mac(mac_address):
             errors[CONF_MAC] = "invalid_mac_address"
             return self.async_show_form(
@@ -41,6 +39,15 @@ class MAConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
+        pin = user_input[CONF_PIN]
+        if not validate_pin(pin):
+            errors[CONF_PIN] = "invalid_pin"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=SCHEMA_USER,
+                errors=errors,
+            )
+            
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=user_input)
 
@@ -76,7 +83,6 @@ class MAConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         pin = user_input[CONF_PIN]
-
         if not validate_pin(pin):
             errors[CONF_PIN] = "invalid_pin"
             return self.async_show_form(
