@@ -6,6 +6,7 @@ from datetime import timedelta
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed, ConfigEntryAuthFailed
 
+from .btmatouch.const import MAOperationMode, MAFanMode, MAVaneMode
 from .btmatouch.thermostat import Status
 from .btmatouch.exceptions import MAException, MAAuthException
 
@@ -15,6 +16,13 @@ _LOGGER = logging.getLogger(__name__)
 
 class MACoordinator(DataUpdateCoordinator):
     """Mitsubishi MA Touch data update coordinator."""
+
+    _heat_setpoint: float | None = None
+    _cool_setpoint: float | None = None
+    _operation_mode: MAOperationMode | None = None
+    _fan_mode: MAFanMode | None = None
+    _vane_mode: MAVaneMode | None = None
+    
 
     def __init__(self, hass: HomeAssistant, config_entry: MAConfigEntry):
         """Initialize the coordinator."""
@@ -55,15 +63,61 @@ class MACoordinator(DataUpdateCoordinator):
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with self._thermostat:
+            async with self._thermostat as thermostat:
                 # Grab active context variables to limit data required to be fetched from API
                 # Note: using context is not required if there is no need or ability to limit
                 # data retrieved from API.
-                return await self._thermostat.async_get_status()
-        except MAAuthException as ex:
-            # Raising ConfigEntryAuthFailed will cancel future updates
-            # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-            raise ConfigEntryAuthFailed from ex
+
+                if heat_setpoint := self._heat_setpoint:
+                    self._heat_setpoint = None
+                    await thermostat.async_set_heat_setpoint(heat_setpoint)
+                if cool_setpoint := self._cool_setpoint:
+                    self._cool_setpoint = None
+                    await thermostat.async_set_cool_setpoint(cool_setpoint)
+                if operation_mode := self._operation_mode:
+                    self._operation_mode = None
+                    await thermostat.async_set_operation_mode(operation_mode)
+                if fan_mode := self._fan_mode:
+                    self._fan_mode = None
+                    await thermostat.async_set_fan_mode(fan_mode)
+                if vane_mode := self._vane_mode:
+                    self._vane_mode = None
+                    await thermostat.async_set_vane_mode(vane_mode)
+
+                return await thermostat.async_get_status()
+        # except MAAuthException as ex:
+        #     # Raising ConfigEntryAuthFailed will cancel future updates
+        #     # and start a config flow with SOURCE_REAUTH (async_step_reauth)
+        #     raise ConfigEntryAuthFailed from ex
         except MAException as ex:
             raise UpdateFailed(f"Error communicating with API: {ex}") from ex
-            # _LOGGER.error("[%s] Error updating MA Touch thermostat: %s", mac_address, ex)
+
+    async def async_set_heat_setpoint(self, temperature: float) -> None:
+        """Sets the heat setpoint."""
+
+        self._heat_setpoint = temperature
+        await self.async_request_refresh()
+
+    async def async_set_cool_setpoint(self, temperature: float) -> None:
+        """Sets the cool setpoint."""
+
+        self._cool_setpoint = temperature
+        await self.async_request_refresh()
+
+    async def async_set_operation_mode(self, operation_mode: MAOperationMode) -> None:
+        """Sets the operation mode."""
+
+        self._operation_mode = operation_mode
+        await self.async_request_refresh()
+
+    async def async_set_fan_mode(self, fan_mode: MAFanMode) -> None:
+        """Sets the fan mode."""
+
+        self._fan_mode = fan_mode
+        await self.async_request_refresh()
+
+    async def async_set_vane_mode(self, vane_mode: MAVaneMode) -> None:
+        """Sets the vane mode."""
+
+        self._vane_mode = vane_mode
+        await self.async_request_refresh()
