@@ -23,7 +23,6 @@ class MACoordinator(DataUpdateCoordinator):
     _fan_mode: MAFanMode | None = None
     _vane_mode: MAVaneMode | None = None
 
-
     def __init__(self, hass: HomeAssistant, config_entry: MAConfigEntry):
         """Initialize the coordinator."""
 
