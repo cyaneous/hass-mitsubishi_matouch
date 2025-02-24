@@ -1,6 +1,7 @@
 """Models for the btmatouch library."""
 
 from __future__ import annotations
+from typing import Self
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass

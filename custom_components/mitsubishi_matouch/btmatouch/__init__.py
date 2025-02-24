@@ -1,7 +1,7 @@
 """Python library to interact with Mitsubishi MA Touch thermostats."""
 
 __title__ = "btmatouch"
-__author__ = "lupinglade"
+__author__ = "cyaneous"
 __license__ = "MIT"
 __copyright__ = "Copyright (c) 2024"
 

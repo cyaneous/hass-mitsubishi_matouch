@@ -9,6 +9,7 @@ __all__ = [
     "MAStateException",
     "MAInternalException",
     "MAResponseException",
+    "MAAuthException",
 ]
 
 
@@ -42,3 +43,6 @@ class MAInternalException(MAException):
 
 class MAResponseException(MAException):
     """Exception for response errors."""
+
+class MAAuthException(MAException):
+    """Exception for auth errors."""

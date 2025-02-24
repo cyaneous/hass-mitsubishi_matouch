@@ -2,9 +2,8 @@
 
 import logging
 import asyncio
-from collections import defaultdict
 from types import TracebackType
-from typing import Awaitable, Callable, Literal, Self, Union, overload
+from typing import Self
 
 from bleak import BleakClient
 from bleak.backends.characteristic import BleakGATTCharacteristic
@@ -13,7 +12,6 @@ from bleak.exc import BleakError
 from construct import StreamError
 
 from ._structures import (
-    _MAStruct,
     _MAMessageHeader,
     _MAMessageFooter,
     _MARequest,
@@ -27,7 +25,6 @@ from ._structures import (
 from .const import (
     DEFAULT_COMMAND_TIMEOUT,
     DEFAULT_CONNECTION_TIMEOUT,
-    MAEvent,
     MAOperationMode,
     _MACharacteristic,
     _MAMessageType,
@@ -42,6 +39,7 @@ from .exceptions import (
     MAConnectionException,
     MAInternalException,
     MAResponseException,
+    MAAuthException,
     MAStateException,
     MATimeoutException,
 )
@@ -73,6 +71,7 @@ class Thermostat:
             connection_timeout (int, optional): The connection timeout in seconds. Defaults to DEFAULT_CONNECTION_TIMEOUT.
             command_timeout (int, optional): The command timeout in seconds. Defaults to DEFAULT_COMMAND_TIMEOUT.
         """
+        
         self._mac_address = mac_address
         self._pin = pin
         self._ble_device = ble_device
@@ -83,11 +82,8 @@ class Thermostat:
         self._software_version: str | None = None
         self._last_status: Status | None = None
 
-        self._callbacks: defaultdict[
-            MAEvent, list[Union[Callable[..., None], Callable[..., Awaitable[None]]]]
-        ] = defaultdict(list)
-
-        self._conn: BleakClient = BleakClient( #TODO: hass docs recommend not reusing BleakClient between connections to avoid connection instability?
+        # TODO: hass docs recommend not reusing BleakClient between connections to avoid connection instability?
+        self._conn: BleakClient = BleakClient( 
             self._ble_device,
             disconnected_callback=self._on_disconnected,
             timeout=DEFAULT_CONNECTION_TIMEOUT,
@@ -107,7 +103,20 @@ class Thermostat:
         Returns:
             bool: True if connected, False otherwise.
         """
+        
         return self._conn.is_connected
+
+    @property
+    def firmware_version(self) -> str | None:
+        """Get the thermostat firmware version."""
+
+        return self._firmware_version
+
+    @property
+    def software_version(self) -> str | None:
+        """Get the thermostat software version."""
+
+        return self._software_version
 
     @property
     def status(self) -> Status:
@@ -129,7 +138,6 @@ class Thermostat:
         """Connect to the thermostat.
 
         After connecting, the device data and status will be queried and stored.
-        When the connection is established, the CONNECTED event will be triggered.
 
         Raises:
             MAStateException: If the thermostat is already connected.
@@ -158,8 +166,6 @@ class Thermostat:
                 self._firmware_version = await self._async_read_char_str(_MACharacteristic.FIRMWARE_VERSION)
                 self._software_version = await self._async_read_char_str(_MACharacteristic.SOFTWARE_VERSION)
                 _LOGGER.debug("[%s] Firmware version: %s, software version: %s", self._mac_address, self._firmware_version, self._software_version)
-
-            await self._trigger_event(MAEvent.CONNECTED)
         except BleakError as ex:
             raise MAConnectionException("Could not connect to the device") from ex
         except TimeoutError as ex:
@@ -169,13 +175,13 @@ class Thermostat:
         """Disconnect from the thermostat.
 
         Before disconnection all pending futures will be cancelled.
-        When the disconnection is complete, the DISCONNECTED event will be triggered.
 
         Raises:
             MAStateException: If the thermostat is not connected.
             MAConnectionException: If the disconnection fails.
             MATimeoutException: If the disconnection times out.
         """
+        
         if not self.is_connected:
             raise MAStateException("Not connected")
 
@@ -201,7 +207,7 @@ class Thermostat:
             MARequestException: If an error occurs while sending the command.
             MATimeoutException: If the command times out.
             MAAlreadyAwaitingResponseException: If a status command is already pending.
-            MAResponseException: If the PIN is incorrect.
+            MAAuthException: If the PIN is incorrect.
         """
 
         request = _MAAuthenticatedRequest(message_type=_MAMessageType.LOGIN_REQUEST, request_flag=0x01, pin=pin)
@@ -223,9 +229,9 @@ class Thermostat:
             MARequestException: If an error occurs while sending the command.
             MATimeoutException: If the command times out.
             MAAlreadyAwaitingResponseException: If a status command is already pending.
-            MAResponseException: If the PIN is incorrect.
+            MAAuthException: If the PIN is incorrect.
         """
-
+        
         # not sure what this does yet, but seems to be required
         request = _MAAuthenticatedRequest(message_type=_MAMessageType.UNKNOWN_3, request_flag=0x01, pin=pin)
         await self._async_write_request(request)
@@ -258,10 +264,9 @@ class Thermostat:
         status = Status._from_struct(response)
         _LOGGER.debug("[%s] Status payload: %s", self._mac_address, response_bytes.hex())
         _LOGGER.debug("[%s] Status IN: %s", self._mac_address, vars(response))
-        #_LOGGER.debug("[%s] tatus OUT: %s", self._mac_address, vars(status))
+        #_LOGGER.debug("[%s] Status OUT: %s", self._mac_address, vars(status))
         self._last_status = status
-        await self._trigger_event(MAEvent.STATUS_RECEIVED, status=status)
-        return self._last_status
+        return status
 
     async def async_set_cool_setpoint(self, temperature: float) -> None:
         """Set the heating setpoint temperature.
@@ -401,8 +406,7 @@ class Thermostat:
     async def __aenter__(self) -> Self:
         """Async context manager enter.
 
-        Connects to the thermostat. After connecting, the device data and status will be queried and stored.
-        When the connection is established, the CONNECTED event will be triggered.
+        Connects to the thermostat. After connecting, authentication will be performed.
 
         Raises:
             MAStateException: If the thermostat is already connected.
@@ -427,7 +431,6 @@ class Thermostat:
         """Async context manager exit.
 
         Disconnects from the thermostat. Before disconnection all pending futures will be cancelled.
-        When the disconnection is complete, the DISCONNECTED event will be triggered.
 
         Raises:
             MAStateException: If the thermostat is not connected.
@@ -485,7 +488,7 @@ class Thermostat:
         """Write a request to the thermostat.
 
         Args:
-            command (_MAStruct): The command to write.
+            command (_MARequest): The command to write.
 
         Raises:
             MAStateException: If the thermostat is not connected.
@@ -539,6 +542,10 @@ class Thermostat:
                     return response_bytes
                 case _MAResult.IN_MENUS:
                     raise MAResponseException(f"Failure result received: {response_header.result} - thermostat in menus?")
+                case _MAResult.BAD_PIN:
+                    raise MAAuthException("Failure result received: Incorrect PIN?")
+                case _MAResult.UNKNOWN_3_BAD_PIN:
+                    raise MAAuthException("Failure result received: Incorrect PIN?")
                 case _:
                     raise MAResponseException(f"Failure result received: {response_header.result}")
         except TimeoutError as ex:
@@ -587,7 +594,6 @@ class Thermostat:
         """Handle disconnection from the thermostat."""
 
         _LOGGER.debug("[%s] Disconnected.", self._mac_address)
-        asyncio.create_task(self._trigger_event(MAEvent.DISCONNECTED))
 
     async def _on_message_received(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         """Handle received messages from the thermostat."""
@@ -599,7 +605,7 @@ class Thermostat:
         if self._receive_length == 0:
             header = _MAMessageHeader.from_bytes(data_bytes)
             if header.length > 64:
-                raise MAInternalException(f"Received message too long: %i", header.length)
+                raise MAInternalException(f"Received message too long: {header.length}")
 
             self._receive_length = header.length
             self._receive_buffer = data_bytes[2:]
@@ -618,131 +624,4 @@ class Thermostat:
         if self._response_future is not None:
             self._response_future.set_result(payload)
         else:
-            raise MAInternalException(f"Unsolicited message received, payload: %s", payload)
-
-    ### Callbacks ###
-
-    @overload
-    def register_callback(
-        self,
-        event: Union[Literal[MAEvent.CONNECTED]],
-        callback: Union[Callable[[], None], Callable[[], Awaitable[None]]],
-    ) -> None: ...
-
-    @overload
-    def register_callback(
-        self,
-        event: Literal[MAEvent.DISCONNECTED],
-        callback: Union[Callable[[], None], Callable[[], Awaitable[None]]],
-    ) -> None: ...
-
-    @overload
-    def register_callback(
-        self,
-        event: Literal[MAEvent.STATUS_RECEIVED],
-        callback: Union[Callable[[Status], None], Callable[[Status], Awaitable[None]]],
-    ) -> None: ...
-
-    def register_callback(
-        self,
-        event: MAEvent,
-        callback: Union[Callable[..., None], Callable[..., Awaitable[None]]],
-    ) -> None:
-        """Register a callback for a specific event."""
-        if callback in self._callbacks[event]:
-            return
-
-        self._callbacks[event].append(callback)
-
-    @overload
-    def unregister_callback(
-        self,
-        event: Union[Literal[MAEvent.CONNECTED]],
-        callback: Union[Callable[[], None], Callable[[], Awaitable[None]]],
-    ) -> None: ...
-
-    @overload
-    def unregister_callback(
-        self,
-        event: Literal[MAEvent.DISCONNECTED],
-        callback: Union[Callable[[], None], Callable[[], Awaitable[None]]],
-    ) -> None: ...
-
-    @overload
-    def unregister_callback(
-        self,
-        event: Literal[MAEvent.STATUS_RECEIVED],
-        callback: Union[Callable[[Status], None], Callable[[Status], Awaitable[None]]],
-    ) -> None: ...
-
-    def unregister_callback(
-        self,
-        event: MAEvent,
-        callback: Union[Callable[..., None], Callable[..., Awaitable[None]]],
-    ) -> None:
-        """Unregister a callback for a specific event."""
-        if callback not in self._callbacks[event]:
-            return
-
-        self._callbacks[event].remove(callback)
-
-    @overload
-    async def _trigger_event(
-        self,
-        event: Literal[MAEvent.CONNECTED],
-    ) -> None: ...
-
-    @overload
-    async def _trigger_event(
-        self,
-        event: Literal[MAEvent.DISCONNECTED]
-    ) -> None: ...
-
-    @overload
-    async def _trigger_event(
-        self,
-        event: Literal[MAEvent.STATUS_RECEIVED],
-        *,
-        status: Status,
-    ) -> None: ...
-
-    async def _trigger_event(
-        self,
-        event: MAEvent,
-        *,
-        #device_data: DeviceData | None = None,
-        status: Status | None = None,
-    ) -> None:
-        """Call the callbacks for a specific event."""
-        async_callbacks = [
-            callback
-            for callback in self._callbacks[event]
-            if asyncio.iscoroutinefunction(callback)
-        ]
-        sync_callbacks = [
-            callback
-            for callback in self._callbacks[event]
-            if not asyncio.iscoroutinefunction(callback)
-        ]
-
-        args: (
-            tuple[Status]
-            | tuple[()]
-        )
-
-        match event:
-            case MAEvent.DISCONNECTED:
-                args = []
-            case MAEvent.CONNECTED:
-                args = []
-            case MAEvent.STATUS_RECEIVED:
-                if status is None:
-                    raise MAInternalException(
-                        "status must not be None for STATUS_RECEIVED event"
-                    )
-                args = [status]
-
-        await asyncio.gather(*[callback(*args) for callback in async_callbacks])
-
-        for callback in sync_callbacks:
-            callback(*args)
+            raise MAInternalException(f"Unsolicited message received, payload: {payload}")

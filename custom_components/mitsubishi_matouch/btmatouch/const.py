@@ -9,7 +9,6 @@ __all__ = [
     "MA_MAX_TEMP",
     "DEFAULT_CONNECTION_TIMEOUT",
     "DEFAULT_COMMAND_TIMEOUT",
-    "MAEvent",
     "MAOperationMode",
     "MAFanMode",
     "MAVaneMode",
@@ -27,14 +26,6 @@ DEFAULT_CONNECTION_TIMEOUT = 10
 
 """The default command timeout in seconds."""
 DEFAULT_COMMAND_TIMEOUT = 5
-
-
-class MAEvent(StrEnum):
-    """Event type enumeration."""
-
-    CONNECTED = auto()
-    DISCONNECTED = auto()
-    STATUS_RECEIVED = auto()
 
 
 class MAOperationMode(IntEnum):

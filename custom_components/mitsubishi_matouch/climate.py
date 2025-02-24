@@ -10,18 +10,20 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo, format_mac
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.climate.const import SWING_ON, SWING_OFF
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .btmatouch.const import MA_MIN_TEMP, MA_MAX_TEMP, MAOperationMode, MAVaneMode
 from .btmatouch.exceptions import MAException
-from .btmatouch.const import MAEvent
-from .btmatouch.models import Status
+
+from .coordinator import MACoordinator
 
 from . import MAConfigEntry
 from .const import (
@@ -33,24 +35,41 @@ from .const import (
     HA_TO_MA_FAN,
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: MAConfigEntry,
+    config_entry: MAConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Handle config entry setup."""
 
+    coordinator = MACoordinator(hass, config_entry)
+
+    # Fetch initial data so we have data when entities subscribe
+    #
+    # If the refresh fails, async_config_entry_first_refresh will
+    # raise ConfigEntryNotReady and setup will try again later
+    #
+    # If you do not want to retry setup on failure, use
+    # coordinator.async_refresh() instead
+    await coordinator.async_config_entry_first_refresh()
+
     async_add_entities(
-        [MAClimate(entry)],
+        [MAClimate(coordinator)],
     )
 
+async def async_unload_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
+    """Unload a config entry."""
+    
+    return True
 
-class MAClimate(ClimateEntity):
+class MAClimate(CoordinatorEntity, ClimateEntity):
     """Climate entity to represent an MA Touch thermostat."""
 
     _attr_entity_has_name = True
     _attr_name = None
-    _attr_should_poll = False
+    #_attr_should_poll = False
+    #_attr_available = False
 
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -67,7 +86,6 @@ class MAClimate(ClimateEntity):
     _attr_fan_modes = list(HA_TO_MA_FAN.keys())
     _attr_swing_modes = [SWING_ON, SWING_OFF]
 
-    _attr_available = False
     _attr_hvac_mode: HVACMode | None = None
     _attr_hvac_action: HVACAction | None = None
     _attr_target_temperature: float | None = None
@@ -76,11 +94,13 @@ class MAClimate(ClimateEntity):
     _attr_fan_mode: str | None = None
     _attr_swing_mode: str | None = None
 
-    def __init__(self, entry: MAConfigEntry) -> None:
+    def __init__(self, coordinator: MACoordinator):
         """Initialize the MA Touch entity."""
 
-        self._ma_config = entry.runtime_data.ma_config
-        self._thermostat = entry.runtime_data.thermostat
+        super().__init__(coordinator)
+
+        self._ma_config = coordinator.config_entry.runtime_data.ma_config
+        self._thermostat = coordinator.config_entry.runtime_data.thermostat
         self._attr_unique_id = f"matouch_{format_mac(self._ma_config.mac_address)}"
         self._attr_device_info = DeviceInfo(
             name=f"MA Touch {format_mac(self._ma_config.mac_address)}",
@@ -89,20 +109,9 @@ class MAClimate(ClimateEntity):
             connections={(CONNECTION_BLUETOOTH, self._ma_config.mac_address)},
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity is about to be added to hass."""
-
-        self._thermostat.register_callback(MAEvent.CONNECTED, self._async_on_connected)
-        self._thermostat.register_callback(MAEvent.STATUS_RECEIVED, self._async_on_status_updated)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-
-        self._thermostat.unregister_callback(MAEvent.CONNECTED, self._async_on_connected)
-       
     @callback
-    async def _async_on_connected(self) -> None:
-        """Handle connection to the thermostat."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
         device_registry = dr.async_get(self.hass)
         if device := device_registry.async_get_device(
@@ -110,20 +119,11 @@ class MAClimate(ClimateEntity):
         ):
             device_registry.async_update_device(
                 device.id,
-                hw_version=self._thermostat._firmware_version,
-                sw_version=self._thermostat._software_version,
+                hw_version=self._thermostat.firmware_version,
+                sw_version=self._thermostat.software_version,
             )
 
-    @callback
-    async def _async_on_disconnected(self) -> None:
-        """Handle disconnection from the thermostat."""
-
-        #self._attr_available = False
-        #self.async_write_ha_state()
-
-    @callback
-    async def _async_on_status_updated(self, status: Status) -> None:
-        """Handle updated status from the thermostat."""
+        status = self.coordinator.data
 
         match status.operation_mode:
             case MAOperationMode.AUTO:
@@ -155,9 +155,8 @@ class MAClimate(ClimateEntity):
         self._attr_fan_mode = MA_TO_HA_FAN[status.fan_mode]
         self._attr_swing_mode = SWING_ON if status.vane_mode is MAVaneMode.SWING else SWING_OFF
 
-        self._attr_available = True
-        
-        self.async_write_ha_state()
+        #self._attr_available = True
+        super()._handle_coordinator_update()
 
     def _get_current_hvac_action(self) -> HVACAction:
         """Return the current hvac action."""
@@ -187,33 +186,33 @@ class MAClimate(ClimateEntity):
                     case MAOperationMode.HEAT:
                         async with self._thermostat:
                             await self._thermostat.async_set_heat_setpoint(temperature)
-                            await self._thermostat.async_get_status()
+                        await self.coordinator.async_request_refresh()
                     case MAOperationMode.COOL | MAOperationMode.DRY:
                         async with self._thermostat:
                             await self._thermostat.async_set_cool_setpoint(temperature)
-                            await self._thermostat.async_get_status()
+                        await self.coordinator.async_request_refresh()
                     case _:
                         raise ServiceValidationError("Target setpoint is ambiguous in this mode")
             if (temperature := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
                 async with self._thermostat:
                     await self._thermostat.async_set_heat_setpoint(temperature)
-                    await self._thermostat.async_get_status()
+                await self.coordinator.async_request_refresh()
             if (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
                 async with self._thermostat:
                     await self._thermostat.async_set_cool_setpoint(temperature)
-                    await self._thermostat.async_get_status()
+                await self.coordinator.async_request_refresh()
         except MAException as ex:
             raise ServiceValidationError(f"Failed to set temperature: {ex}") from ex
         except ValueError as ex:
             raise ServiceValidationError("Invalid temperature") from ex
-    
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
 
         try:
             async with self._thermostat:
                 await self._thermostat.async_set_operation_mode(HA_TO_MA_HVAC[hvac_mode])
-                await self._thermostat.async_get_status()
+            await self.coordinator.async_request_refresh()
         except MAException as ex:
             raise ServiceValidationError(f"Failed to set HVAC mode: {ex}") from ex
 
@@ -223,8 +222,8 @@ class MAClimate(ClimateEntity):
         try:
             async with self._thermostat:
                 await self._thermostat.async_set_fan_mode(HA_TO_MA_FAN[fan_mode])
-                await self._thermostat.async_get_status()
-        except MAException:
+            await self.coordinator.async_request_refresh()
+        except MAException as ex:
             raise ServiceValidationError(f"Failed to set fan mode: {ex}") from ex
 
     async def async_set_swing_mode(self, swing_mode):
@@ -233,12 +232,6 @@ class MAClimate(ClimateEntity):
         try:
             async with self._thermostat:
                 await self._thermostat.async_set_vane_mode(MAVaneMode.SWING if swing_mode == SWING_ON else MAVaneMode.AUTO)
-                await self._thermostat.async_get_status()
-        except MAException:
+            await self.coordinator.async_request_refresh()
+        except MAException as ex:
             raise ServiceValidationError(f"Failed to set swing mode: {ex}") from ex
-   
-    @property
-    def available(self) -> bool:
-        """Whether the entity is available."""
-
-        return self._thermostat.status is not None and self._attr_available

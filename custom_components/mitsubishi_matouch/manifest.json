@@ -7,7 +7,7 @@
       "connectable": true
     }
   ],
-  "codeowners": ["@lupinglade"],
+  "codeowners": ["@cyaneous"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://github.com/cyaneous/hass-mitsubishi_matouch",
@@ -16,5 +16,5 @@
   "issue_tracker": "https://github.com/cyaneous/hass-mitsubishi_matouch/issues",
   "loggers": ["mitsubishi_matouch"],
   "requirements": ["bleak-esphome==1.1.0"],
-  "version": "0.1.1"
+  "version": "0.2.0"
 }

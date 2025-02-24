@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from homeassistant.config_entries import ConfigEntry
+
 from .btmatouch.thermostat import Thermostat
 
 from .const import (
@@ -19,8 +21,10 @@ class MAConfig:
 
 
 @dataclass(slots=True)
-class MAConfigEntryData:
+class MAConfigEntryRuntimeData:
     """Config entry for a single MA Touch device."""
 
     ma_config: MAConfig
     thermostat: Thermostat
+
+type MAConfigEntry = ConfigEntry[MAConfigEntryRuntimeData]
