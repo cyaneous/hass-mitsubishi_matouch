@@ -89,7 +89,7 @@ class MACoordinator(DataUpdateCoordinator):
         #     # and start a config flow with SOURCE_REAUTH (async_step_reauth)
         #     raise ConfigEntryAuthFailed from ex
         except MAException as ex:
-            raise UpdateFailed(f"Error communicating with API: {ex}") from ex
+            raise UpdateFailed(f"Error communicating with thermostat: {ex}") from ex
 
     async def async_set_heat_setpoint(self, temperature: float) -> None:
         """Sets the heat setpoint."""
