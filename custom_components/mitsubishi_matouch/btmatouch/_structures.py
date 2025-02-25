@@ -81,6 +81,7 @@ class _MAResponse(_MAStruct):
     05 00 02 00 <-- session time limit reached?
     05 09 02 00 10 54 89 00 <-- in menus
     """
+    
     message_type: _MAMessageType = csfield(TEnum(Int8un, _MAMessageType))
     result: _MAResult = csfield(TEnum(Int8un, _MAResult))
     unknown_1: int = csfield(Int8un)
