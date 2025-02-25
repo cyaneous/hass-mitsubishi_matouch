@@ -17,11 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 class MACoordinator(DataUpdateCoordinator):
     """Mitsubishi MA Touch data update coordinator."""
 
-    _heat_setpoint: float | None = None
-    _cool_setpoint: float | None = None
-    _operation_mode: MAOperationMode | None = None
-    _fan_mode: MAFanMode | None = None
-    _vane_mode: MAVaneMode | None = None
+    _target_heat_setpoint: float | None = None
+    _target_cool_setpoint: float | None = None
+    _target_operation_mode: MAOperationMode | None = None
+    _target_fan_mode: MAFanMode | None = None
+    _target_vane_mode: MAVaneMode | None = None
 
     def __init__(self, hass: HomeAssistant, config_entry: MAConfigEntry):
         """Initialize the coordinator."""
@@ -66,21 +66,20 @@ class MACoordinator(DataUpdateCoordinator):
                 # Grab active context variables to limit data required to be fetched from API
                 # Note: using context is not required if there is no need or ability to limit
                 # data retrieved from API.
-
-                if heat_setpoint := self._heat_setpoint:
-                    self._heat_setpoint = None
+                if heat_setpoint := self._target_heat_setpoint:
+                    self._target_heat_setpoint = None
                     await thermostat.async_set_heat_setpoint(heat_setpoint)
-                if cool_setpoint := self._cool_setpoint:
-                    self._cool_setpoint = None
+                if cool_setpoint := self._target_cool_setpoint:
+                    self._target_cool_setpoint = None
                     await thermostat.async_set_cool_setpoint(cool_setpoint)
-                if operation_mode := self._operation_mode:
-                    self._operation_mode = None
+                if operation_mode := self._target_operation_mode:
+                    self._target_operation_mode = None
                     await thermostat.async_set_operation_mode(operation_mode)
-                if fan_mode := self._fan_mode:
-                    self._fan_mode = None
+                if fan_mode := self._target_fan_mode:
+                    self._target_fan_mode = None
                     await thermostat.async_set_fan_mode(fan_mode)
-                if vane_mode := self._vane_mode:
-                    self._vane_mode = None
+                if vane_mode := self._target_vane_mode:
+                    self._target_vane_mode = None
                     await thermostat.async_set_vane_mode(vane_mode)
 
                 return await thermostat.async_get_status()
@@ -94,29 +93,29 @@ class MACoordinator(DataUpdateCoordinator):
     async def async_set_heat_setpoint(self, temperature: float) -> None:
         """Sets the heat setpoint."""
 
-        self._heat_setpoint = temperature
+        self._target_heat_setpoint = temperature
         await self.async_request_refresh()
 
     async def async_set_cool_setpoint(self, temperature: float) -> None:
         """Sets the cool setpoint."""
 
-        self._cool_setpoint = temperature
+        self._target_cool_setpoint = temperature
         await self.async_request_refresh()
 
     async def async_set_operation_mode(self, operation_mode: MAOperationMode) -> None:
         """Sets the operation mode."""
 
-        self._operation_mode = operation_mode
+        self._target_operation_mode = operation_mode
         await self.async_request_refresh()
 
     async def async_set_fan_mode(self, fan_mode: MAFanMode) -> None:
         """Sets the fan mode."""
 
-        self._fan_mode = fan_mode
+        self._target_fan_mode = fan_mode
         await self.async_request_refresh()
 
     async def async_set_vane_mode(self, vane_mode: MAVaneMode) -> None:
         """Sets the vane mode."""
 
-        self._vane_mode = vane_mode
+        self._target_vane_mode = vane_mode
         await self.async_request_refresh()
