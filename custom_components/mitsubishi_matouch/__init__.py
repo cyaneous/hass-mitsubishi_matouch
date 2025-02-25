@@ -15,6 +15,7 @@ PLATFORMS = [
     Platform.CLIMATE,
 ]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     """Handle config entry setup."""
 
