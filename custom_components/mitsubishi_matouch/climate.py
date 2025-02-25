@@ -87,6 +87,7 @@ class MAClimate(CoordinatorEntity[MACoordinator], ClimateEntity):
 
     _attr_hvac_mode: HVACMode | None = None
     _attr_hvac_action: HVACAction | None = None
+    _attr_current_temperature: float | None = None
     _attr_target_temperature: float | None = None
     _attr_target_temperature_high: float | None = None
     _attr_target_temperature_low: float | None = None
@@ -212,6 +213,7 @@ class MAClimate(CoordinatorEntity[MACoordinator], ClimateEntity):
         """Set new target swing operation."""
 
         try:
-            await self.coordinator.async_set_vane_mode(MAVaneMode.SWING if swing_mode == SWING_ON else MAVaneMode.AUTO)
+            vane_mode = MAVaneMode.SWING if swing_mode == SWING_ON else MAVaneMode.AUTO
+            await self.coordinator.async_set_vane_mode(vane_mode)
         except MAException as ex:
             raise ServiceValidationError(f"Failed to set swing mode: {ex}") from ex
