@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo, format_mac
 from homeassistant.components.climate.const import SWING_ON, SWING_OFF
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
