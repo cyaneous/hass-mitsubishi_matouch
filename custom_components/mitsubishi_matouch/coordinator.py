@@ -14,6 +14,7 @@ from .models import MAConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class MACoordinator(DataUpdateCoordinator):
     """Mitsubishi MA Touch data update coordinator."""
 
