@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
         assert mac_address is not None
         assert pin is not None
 
-    ma_config = MAConfig(
+    config = MAConfig(
         mac_address=mac_address,
         pin=pin
     )
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     )
 
     entry.runtime_data = MAConfigEntryRuntimeData(
-        ma_config=ma_config,
+        config=config,
         thermostat=thermostat
     )
 
