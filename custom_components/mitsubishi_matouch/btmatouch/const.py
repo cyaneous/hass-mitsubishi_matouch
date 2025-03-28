@@ -15,14 +15,14 @@ __all__ = [
 ]
 
 
-"""The minimum temperature that is still displayed as a temperature in degrees Celsius."""
+"""The minimum temperature that can be set in degrees Celsius."""
 MA_MIN_TEMP = 16.0
 
-"""The maximum temperature that is still displayed as a temperature in degrees Celsius."""
+"""The maximum temperature that can be set in degrees Celsius."""
 MA_MAX_TEMP = 31.0
 
 """The default connection timeout in seconds."""
-DEFAULT_CONNECTION_TIMEOUT = 10
+DEFAULT_CONNECTION_TIMEOUT = 5
 
 """The default command timeout in seconds."""
 DEFAULT_COMMAND_TIMEOUT = 5
