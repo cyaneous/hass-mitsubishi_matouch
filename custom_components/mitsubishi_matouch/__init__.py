@@ -54,12 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    try:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        return True
-    except Exception as ex:
-        _LOGGER.error("Error setting up Mitsubishi MA Touch integration: %s", ex)
-        raise ConfigEntryNotReady from ex
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     """Handle config entry unload."""
