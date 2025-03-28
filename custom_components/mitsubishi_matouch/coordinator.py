@@ -31,10 +31,10 @@ class MACoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             # Name of the data. For logging purposes.
-            name=config_entry.runtime_data.ma_config.mac_address,
+            name=config_entry.runtime_data.config.mac_address,
             config_entry=config_entry,
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=config_entry.runtime_data.ma_config.scan_interval),
+            update_interval=timedelta(seconds=config_entry.runtime_data.config.scan_interval),
             # Set always_update to `False` if the data returned from the
             # api can be compared via `__eq__` to avoid duplicate updates
             # being dispatched to listeners

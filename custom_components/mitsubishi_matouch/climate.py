@@ -97,12 +97,12 @@ class MAClimate(CoordinatorEntity[MACoordinator], ClimateEntity):
 
         super().__init__(coordinator)
 
-        self._ma_config = coordinator.config_entry.runtime_data.ma_config
+        self._config = coordinator.config_entry.runtime_data.config
         self._thermostat = coordinator.config_entry.runtime_data.thermostat
-        self._attr_unique_id = f"matouch_{format_mac(self._ma_config.mac_address)}"
+        self._attr_unique_id = f"matouch_{format_mac(self._config.mac_address)}"
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, self._ma_config.mac_address)},
-            name=f"MA Touch {format_mac(self._ma_config.mac_address)}",
+            connections={(CONNECTION_BLUETOOTH, self._config.mac_address)},
+            name=f"MA Touch {format_mac(self._config.mac_address)}",
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
             model_id=DEVICE_MODEL_ID,

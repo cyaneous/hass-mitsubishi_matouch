@@ -24,7 +24,7 @@ class MAConfig:
 class MAConfigEntryRuntimeData:
     """Config entry for a single MA Touch device."""
 
-    ma_config: MAConfig
+    config: MAConfig
     thermostat: Thermostat
 
 type MAConfigEntry = ConfigEntry[MAConfigEntryRuntimeData]
