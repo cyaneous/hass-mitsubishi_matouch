@@ -1,7 +1,6 @@
 """Support for Mitsubishi MA Touch thermostats."""
 
 import logging
-from typing import TYPE_CHECKING
 
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
@@ -25,14 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     mac_address: str = entry.unique_id
     pin: str = entry.data.get("pin")
 
-    if TYPE_CHECKING:
-        assert mac_address is not None
-        assert pin is not None
-
-    config = MAConfig(
-        mac_address=mac_address,
-        pin=pin
-    )
+    if pin is None or len(pin) != 4:
+        raise ConfigEntryNotReady(f"MA Touch thermostat '{mac_address}' is missing PIN configuration")
 
     device = bluetooth.async_ble_device_from_address(
         hass, mac_address.upper(), connectable=True
@@ -45,6 +38,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
         mac_address=mac_address,
         pin=int(pin, 16),
         ble_device=device
+    )
+
+    config = MAConfig(
+        mac_address=mac_address,
+        pin=pin
     )
 
     entry.runtime_data = MAConfigEntryRuntimeData(
