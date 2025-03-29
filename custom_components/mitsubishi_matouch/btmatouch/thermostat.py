@@ -55,7 +55,6 @@ class Thermostat:
 
     def __init__(
         self,
-        mac_address: str,
         pin: int,
         ble_device: BLEDevice,
         connection_timeout: int = DEFAULT_CONNECTION_TIMEOUT,
@@ -72,7 +71,7 @@ class Thermostat:
             command_timeout (int, optional): The command timeout in seconds. Defaults to DEFAULT_COMMAND_TIMEOUT.
         """
 
-        self._mac_address = mac_address
+        self._mac_address = ble_device.address
         self._pin = pin
         self._ble_device = ble_device
         self._connection_timeout = connection_timeout

@@ -6,8 +6,10 @@ from datetime import timedelta
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed, ConfigEntryAuthFailed
 
+from bleak.backends.device import BLEDevice
+
 from .btmatouch.const import MAOperationMode, MAFanMode, MAVaneMode
-from .btmatouch.thermostat import Status
+from .btmatouch.thermostat import Status, Thermostat
 from .btmatouch.exceptions import MAException, MAAuthException
 
 from .models import MAConfigEntry
@@ -24,24 +26,39 @@ class MACoordinator(DataUpdateCoordinator):
     _target_fan_mode: MAFanMode | None = None
     _target_vane_mode: MAVaneMode | None = None
 
-    def __init__(self, hass: HomeAssistant, config_entry: MAConfigEntry):
+    def __init__(self, hass: HomeAssistant, config_entry: MAConfigEntry, pin: str, scan_interval: int, ble_device: BLEDevice):
         """Initialize the coordinator."""
 
         super().__init__(
             hass,
             _LOGGER,
             # Name of the data. For logging purposes.
-            name=config_entry.runtime_data.config.mac_address,
+            name=ble_device.address,
             config_entry=config_entry,
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=config_entry.runtime_data.config.scan_interval),
+            update_interval=timedelta(seconds=scan_interval),
             # Set always_update to `False` if the data returned from the
             # api can be compared via `__eq__` to avoid duplicate updates
             # being dispatched to listeners
             always_update=True,
         )
 
-        self._thermostat = config_entry.runtime_data.thermostat
+        self._thermostat = Thermostat(
+            pin=int(pin, 16),
+            ble_device=ble_device,
+        )
+
+    @property
+    def firmware_version(self) ->  str | None:
+        """Get the thermostat firmware version."""
+
+        return self._thermostat.firmware_version
+
+    @property
+    def software_version(self) -> str | None:
+        """Get the thermostat software version."""
+
+        return self._thermostat.software_version
 
     async def _async_setup(self) -> None:
         """Set up the coordinator

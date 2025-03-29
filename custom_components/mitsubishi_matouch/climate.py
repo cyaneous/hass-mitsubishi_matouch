@@ -42,19 +42,8 @@ async def async_setup_entry(
 ) -> None:
     """Handle config entry setup."""
 
-    coordinator = MACoordinator(hass, entry)
-
-    # Fetch initial data so we have data when entities subscribe
-    #
-    # If the refresh fails, async_config_entry_first_refresh will
-    # raise ConfigEntryNotReady and setup will try again later
-    #
-    # If you do not want to retry setup on failure, use
-    # coordinator.async_refresh() instead
-    await coordinator.async_refresh()
-
     async_add_entities(
-        [MAClimate(coordinator)],
+        [MAClimate(entry.runtime_data.coordinator)],
     )
 
 async def async_unload_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
@@ -98,7 +87,6 @@ class MAClimate(CoordinatorEntity[MACoordinator], ClimateEntity):
         super().__init__(coordinator)
 
         self._config = coordinator.config_entry.runtime_data.config
-        self._thermostat = coordinator.config_entry.runtime_data.thermostat
         self._attr_unique_id = f"matouch_{format_mac(self._config.mac_address)}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, self._config.mac_address)},
@@ -106,8 +94,8 @@ class MAClimate(CoordinatorEntity[MACoordinator], ClimateEntity):
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
             model_id=DEVICE_MODEL_ID,
-            sw_version=self._thermostat.software_version,
-            hw_version=self._thermostat.firmware_version,
+            sw_version=coordinator.software_version,
+            hw_version=coordinator.firmware_version,
         )
 
     @callback

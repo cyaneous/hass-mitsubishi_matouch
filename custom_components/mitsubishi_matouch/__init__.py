@@ -7,9 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .btmatouch.thermostat import Thermostat
-
 from .models import MAConfigEntry, MAConfig, MAConfigEntryRuntimeData
+from .coordinator import MACoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,21 +33,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: MAConfigEntry) -> bool:
     if device is None:
         raise ConfigEntryNotReady(f"MA Touch thermostat '{mac_address}' could not be found")
 
-    thermostat = Thermostat(
-        mac_address=mac_address,
-        pin=int(pin, 16),
-        ble_device=device
-    )
-
     config = MAConfig(
         mac_address=mac_address,
         pin=pin
     )
 
+    coordinator = MACoordinator(
+        hass,
+        config_entry=entry,
+        pin=config.pin,
+        scan_interval=config.scan_interval,
+        ble_device=device
+    )
+
     entry.runtime_data = MAConfigEntryRuntimeData(
         config=config,
-        thermostat=thermostat
+        coordinator=coordinator
     )
+
+    # Fetch initial data so we have data when entities subscribe
+    #
+    # If the refresh fails, async_config_entry_first_refresh will
+    # raise ConfigEntryNotReady and setup will try again later
+    #
+    # If you do not want to retry setup on failure, use
+    # coordinator.async_refresh() instead
+    await coordinator.async_config_entry_first_refresh()
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 

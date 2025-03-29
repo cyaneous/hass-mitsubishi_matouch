@@ -3,8 +3,7 @@
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
-
-from .btmatouch.thermostat import Thermostat
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEFAULT_SCAN_INTERVAL
 
@@ -23,6 +22,6 @@ class MAConfigEntryRuntimeData:
     """Config entry for a single MA Touch device."""
 
     config: MAConfig
-    thermostat: Thermostat
+    coordinator: DataUpdateCoordinator # cant use MACoordinator here due to cyclical import
 
 type MAConfigEntry = ConfigEntry[MAConfigEntryRuntimeData]
