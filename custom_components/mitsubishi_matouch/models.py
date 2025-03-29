@@ -6,9 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 
 from .btmatouch.thermostat import Thermostat
 
-from .const import (
-    DEFAULT_SCAN_INTERVAL,
-)
+from .const import DEFAULT_SCAN_INTERVAL
 
 
 @dataclass(slots=True)
