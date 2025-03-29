@@ -23,5 +23,18 @@
       "invalid_mac_address": "Invalid MAC address",
       "invalid_pin": "Invalid PIN"
     }
+  },
+  "entity": {
+    "climate": {
+      "matouch": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          }
+        }
+      }
+    }
   }
 }

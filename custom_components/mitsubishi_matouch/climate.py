@@ -56,6 +56,7 @@ class MAClimate(CoordinatorEntity[MACoordinator], ClimateEntity):
 
     _attr_entity_has_name = True
     _attr_name = None
+    _attr_translation_key = "matouch"
 
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE

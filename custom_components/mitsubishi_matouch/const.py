@@ -40,7 +40,7 @@ MA_TO_HA_FAN: dict[MAFanMode, str] = {
     MAFanMode.HIGH: FAN_HIGH,
     MAFanMode.MEDIUM: FAN_MEDIUM,
     MAFanMode.LOW: FAN_LOW,
-    MAFanMode.QUIET: "Quiet",
+    MAFanMode.QUIET: "quiet",
 }
 
 HA_TO_MA_FAN: dict[str, MAFanMode] = {
@@ -48,7 +48,7 @@ HA_TO_MA_FAN: dict[str, MAFanMode] = {
     FAN_HIGH: MAFanMode.HIGH,
     FAN_MEDIUM: MAFanMode.MEDIUM,
     FAN_LOW: MAFanMode.LOW,
-    "Quiet": MAFanMode.QUIET,
+    "quiet": MAFanMode.QUIET,
 }
 
 DEFAULT_SCAN_INTERVAL = 10 # seconds
