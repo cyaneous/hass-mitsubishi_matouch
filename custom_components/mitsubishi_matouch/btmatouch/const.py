@@ -22,7 +22,7 @@ MA_MIN_TEMP = 16.0
 MA_MAX_TEMP = 31.0
 
 """The default connection timeout in seconds."""
-DEFAULT_CONNECTION_TIMEOUT = 5
+DEFAULT_CONNECTION_TIMEOUT = 10
 
 """The default command timeout in seconds."""
 DEFAULT_COMMAND_TIMEOUT = 5
