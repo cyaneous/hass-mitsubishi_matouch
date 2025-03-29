@@ -149,11 +149,9 @@ class Thermostat:
                 self._software_version = await self._async_read_char_str(_MACharacteristic.SOFTWARE_VERSION)
                 _LOGGER.debug("[%s] Firmware version: %s, software version: %s", self._mac_address, self._firmware_version, self._software_version)
         except BleakError as ex:
-            _LOGGER.debug("[%s] BleakError: %s", self._mac_address, ex)
-            raise MAConnectionException("Could not connect to the device") from ex
+            raise MAConnectionException(f"Could not connect to the device: {ex}") from ex
         except TimeoutError as ex:
-            _LOGGER.debug("[%s] TimeoutError: %s", self._mac_address, ex)
-            raise MATimeoutException("Timeout during connection") from ex
+            raise MATimeoutException("Timeout during connection attempt") from ex
 
     async def async_disconnect(self) -> None:
         """Disconnect from the thermostat.
@@ -167,12 +165,8 @@ class Thermostat:
         """
 
         if not self.is_connected:
-            raise MAStateException("No need to disconnect - not connected")
-
-        exception = MAConnectionException("Connection closed")
-
-        if self._response_future is not None and not self._response_future.done():
-            self._response_future.set_exception(exception)
+            _LOGGER.warning("[%s] No need to disconnect - not connected", self._mac_address)
+            return
 
         try:
             await self._conn.disconnect()
@@ -576,6 +570,10 @@ class Thermostat:
         """Handle disconnection from the thermostat."""
 
         _LOGGER.debug("[%s] Disconnected.", self._mac_address)
+
+        if self._response_future is not None and not self._response_future.done():
+            exception = MAConnectionException("Connection closed while awaiting response")
+            self._response_future.set_exception(exception)
 
     async def _on_message_received(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         """Handle received messages from the thermostat."""
