@@ -399,11 +399,9 @@ class Thermostat:
         """
 
         await self._connection_lock.acquire()
-        try:
-            await self.async_connect()
-            await self.async_login(pin=self._pin)
-        finally:
-            return self
+        await self.async_connect()
+        await self.async_login(pin=self._pin)
+        return self
 
     async def __aexit__(
         self,
