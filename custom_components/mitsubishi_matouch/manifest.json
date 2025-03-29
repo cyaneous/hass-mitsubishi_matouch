@@ -15,6 +15,6 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/cyaneous/hass-mitsubishi_matouch/issues",
   "loggers": ["mitsubishi_matouch"],
-  "requirements": ["bleak-esphome"],
-  "version": "0.3.5"
+  "requirements": ["bleak-esphome==2.12.0"],
+  "version": "0.3.6"
 }
