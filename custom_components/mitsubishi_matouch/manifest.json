@@ -16,5 +16,5 @@
   "issue_tracker": "https://github.com/cyaneous/hass-mitsubishi_matouch/issues",
   "loggers": ["mitsubishi_matouch"],
   "requirements": ["bleak-esphome"],
-  "version": "0.3.4"
+  "version": "0.3.5"
 }
