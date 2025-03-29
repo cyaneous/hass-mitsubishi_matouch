@@ -165,7 +165,7 @@ class Thermostat:
         """
 
         if not self.is_connected:
-            raise MAStateException("Not connected")
+            raise MAStateException("No need to disconnect - not connected")
 
         exception = MAConnectionException("Connection closed")
 
@@ -452,7 +452,7 @@ class Thermostat:
         """
 
         if not self.is_connected:
-            raise MAStateException("Not connected")
+            raise MAStateException("Cannot read char - not connected")
 
         async with self._gatt_lock:
             try:
@@ -480,7 +480,7 @@ class Thermostat:
         _LOGGER.debug("[%s] _async_write_request() called", self._mac_address)
 
         if not self.is_connected:
-            raise MAStateException("Not connected")
+            raise MAStateException("Cannot write request - not connected")
 
         if self._response_future is not None:
             raise MAAlreadyAwaitingResponseException(
