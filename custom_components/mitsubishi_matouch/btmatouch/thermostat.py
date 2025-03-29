@@ -4,12 +4,12 @@ import logging
 import asyncio
 from types import TracebackType
 from typing import Self
+from construct import StreamError
 
 from bleak import BleakClient
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
-from construct import StreamError
 
 from ._structures import (
     _MAMessageHeader,
