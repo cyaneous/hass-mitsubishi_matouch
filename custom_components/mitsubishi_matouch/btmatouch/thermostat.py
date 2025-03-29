@@ -399,8 +399,19 @@ class Thermostat:
         """
 
         await self._connection_lock.acquire()
-        await self.async_connect()
-        await self.async_login(pin=self._pin)
+
+        try:
+            await self.async_connect()
+            await self.async_login(pin=self._pin)
+        except Exception as ex:
+            if self.is_connected:
+                try:
+                    await self.async_disconnect()
+                except Exception:
+                    pass
+            self._connection_lock.release()
+            raise ex
+
         return self
 
     async def __aexit__(
@@ -422,10 +433,6 @@ class Thermostat:
         try:
             if self.is_connected:
                 if exc_value is not None: # ignore exceptions if we already have one coming
-                    try:
-                        await self.async_logout(pin=self._pin)
-                    except Exception:
-                        pass
                     try:
                         await self.async_disconnect()
                     except Exception:
