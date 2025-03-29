@@ -136,7 +136,7 @@ class Thermostat:
         self._message_id = 0
 
         try:
-            await asyncio.wait_for(self._conn.connect(), self._connection_timeout)
+            await self._conn.connect()
 
             _LOGGER.debug("[%s] Connected!", self._mac_address)
 
@@ -456,10 +456,7 @@ class Thermostat:
 
         async with self._gatt_lock:
             try:
-                return await asyncio.wait_for(
-                    self._conn.read_gatt_char(uuid),
-                    self._command_timeout,
-                )
+                return await self._conn.read_gatt_char(uuid)
             except BleakError as ex:
                 raise MARequestException("Error during read") from ex
             except TimeoutError as ex:
@@ -502,10 +499,7 @@ class Thermostat:
                 for i in range(0, len(message), 20):
                     part = message[i:i+20]
                     _LOGGER.debug("[%s] SND: %s", self._mac_address, part.hex())
-                    await asyncio.wait_for(
-                        self._conn.write_gatt_char(_MACharacteristic.WRITE, part, response=False),
-                        self._command_timeout,
-                    )
+                    await self._conn.write_gatt_char(_MACharacteristic.WRITE, part, response=False)
             except BleakError as ex:
                 self._response_future = None
                 raise MARequestException(f"Error during request write: {ex}") from ex
