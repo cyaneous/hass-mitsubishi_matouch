@@ -81,7 +81,7 @@ class Thermostat:
         self._software_version: str | None = None
 
         # TODO: hass docs recommend not reusing BleakClient between connections to avoid connection instability?
-        self._conn: BleakClient = BleakClient(
+        self._conn = BleakClient(
             self._ble_device,
             disconnected_callback=self._on_disconnected,
             timeout=DEFAULT_CONNECTION_TIMEOUT,
