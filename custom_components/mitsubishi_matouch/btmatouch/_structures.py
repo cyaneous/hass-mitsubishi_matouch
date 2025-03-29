@@ -84,8 +84,6 @@ class _MAResponse(_MAStruct):
 
     message_type: _MAMessageType = csfield(TEnum(Int8un, _MAMessageType))
     result: _MAResult = csfield(TEnum(Int8un, _MAResult))
-    unknown_1: int = csfield(Int8un)
-    unknown_2: int = csfield(Int8un)
 
 
 @dataclass
@@ -107,6 +105,8 @@ class _MAStatusRequest(_MARequest):
 class _MAStatusResponse(_MAResponse):
     """Thermostat status response."""
 
+    unknown_1: int = csfield(Int8un)
+    unknown_2: int = csfield(Int8un)
     unknown_3: int = csfield(Int8un)
     unknown_4: int = csfield(Int8un)
     operation_mode_flags: _MAOperationModeFlags = csfield(TFlagsEnum(Int8un, _MAOperationModeFlags))
