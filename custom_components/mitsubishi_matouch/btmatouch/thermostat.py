@@ -149,8 +149,10 @@ class Thermostat:
                 self._software_version = await self._async_read_char_str(_MACharacteristic.SOFTWARE_VERSION)
                 _LOGGER.debug("[%s] Firmware version: %s, software version: %s", self._mac_address, self._firmware_version, self._software_version)
         except BleakError as ex:
+            _LOGGER.debug("[%s] BleakError: %s", self._mac_address, ex)
             raise MAConnectionException("Could not connect to the device") from ex
         except TimeoutError as ex:
+            _LOGGER.debug("[%s] TimeoutError: %s", self._mac_address, ex)
             raise MATimeoutException("Timeout during connection") from ex
 
     async def async_disconnect(self) -> None:
