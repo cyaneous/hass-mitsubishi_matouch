@@ -50,8 +50,8 @@ class _MAStruct(DataclassMixin):
 class _MAMessageHeader(_MAStruct):
     """Message header.
 
-    command header (length will be 2 + 1 + body.length + 2):
-      length: 1 + body.length + 2
+    command header (packet length will be 2 + 1 + body.length + 2):
+      length: uint16 (calculated as 1 + body.length + 2)
       message_id: uint8 (0 through 7?)
     """
 
@@ -68,7 +68,7 @@ class _MAMessageFooter(_MAStruct):
 
 @dataclass
 class _MARequest(_MAStruct):
-    """Request."""
+    """Base request class."""
 
     message_type: _MAMessageType = csfield(TEnum(Int16un, _MAMessageType))
     request_flag: int = csfield(Int8un) # short request flag? commands are 0x01, status request is 0x00
@@ -76,7 +76,7 @@ class _MARequest(_MAStruct):
 
 @dataclass
 class _MAResponse(_MAStruct):
-    """Response.
+    """Base response class.
 
     05 00 02 00 <-- session time limit reached?
     05 09 02 00 10 54 89 00 <-- in menus
