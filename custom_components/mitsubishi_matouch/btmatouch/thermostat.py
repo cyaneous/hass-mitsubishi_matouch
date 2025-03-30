@@ -462,7 +462,7 @@ class Thermostat:
         """Write a request to the thermostat.
 
         Args:
-            command (_MARequest): The command to write.
+            command (_MARequest): The request to write.
 
         Raises:
             MAStateException: If the thermostat is not connected.
