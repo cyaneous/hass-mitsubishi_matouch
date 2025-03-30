@@ -90,8 +90,6 @@ class Thermostat:
             disconnected_callback=self._on_disconnected,
             timeout=DEFAULT_CONNECTION_TIMEOUT,
         )
-        self._connection_lock = asyncio.Lock()
-        self._gatt_lock = asyncio.Lock()
         self._response_future: asyncio.Future[bytes] | None = None
 
         self._message_id = 0
@@ -396,8 +394,6 @@ class Thermostat:
             MARequestException: If an error occurs while sending a command.
         """
 
-        await self._connection_lock.acquire()
-
         try:
             await self.async_connect()
             await self.async_login(pin=self._pin)
@@ -407,7 +403,6 @@ class Thermostat:
                     await self.async_disconnect()
                 except Exception:
                     pass
-            self._connection_lock.release()
             raise ex
 
         return self
@@ -428,18 +423,15 @@ class Thermostat:
             MATimeoutException: If the disconnection times out.
         """
 
-        try:
-            if self.is_connected:
-                if exc_value is not None: # ignore exceptions if we already have one coming
-                    try:
-                        await self.async_disconnect()
-                    except Exception:
-                        pass
-                else:
-                    await self.async_logout(pin=self._pin)
+        if self.is_connected:
+            if exc_value is not None: # ignore exceptions if we already have one coming
+                try:
                     await self.async_disconnect()
-        finally:
-            self._connection_lock.release()
+                except Exception:
+                    pass
+            else:
+                await self.async_logout(pin=self._pin)
+                await self.async_disconnect()
 
     async def _async_read_char_str(self, uuid: str) -> str:
         return "".join(map(chr, await self._async_read_char(uuid)))
@@ -459,13 +451,12 @@ class Thermostat:
         if not self.is_connected:
             raise MAStateException("Cannot read char - not connected")
 
-        async with self._gatt_lock:
-            try:
-                return await self._conn.read_gatt_char(uuid)
-            except BleakError as ex:
-                raise MARequestException("Error during read") from ex
-            except TimeoutError as ex:
-                raise MATimeoutException("Timeout during read") from ex
+        try:
+            return await self._conn.read_gatt_char(uuid)
+        except BleakError as ex:
+            raise MARequestException("Error during read") from ex
+        except TimeoutError as ex:
+            raise MATimeoutException("Timeout during read") from ex
 
     async def _async_write_request(self, request: _MARequest) -> bytes:
         """Write a request to the thermostat.
@@ -499,18 +490,17 @@ class Thermostat:
 
         self._response_future = asyncio.Future()
 
-        async with self._gatt_lock:
-            try:
-                for i in range(0, len(message), 20):
-                    part = message[i:i+20]
-                    _LOGGER.debug("[%s] SND: %s", self._mac_address, part.hex())
-                    await self._conn.write_gatt_char(_MACharacteristic.WRITE, part, response=False)
-            except BleakError as ex:
-                self._response_future = None
-                raise MARequestException(f"Error during request write: {ex}") from ex
-            except TimeoutError as ex:
-                self._response_future = None
-                raise MATimeoutException("Timeout during request write") from ex
+        try:
+            for i in range(0, len(message), 20):
+                part = message[i:i+20]
+                _LOGGER.debug("[%s] SND: %s", self._mac_address, part.hex())
+                await self._conn.write_gatt_char(_MACharacteristic.WRITE, part, response=False)
+        except BleakError as ex:
+            self._response_future = None
+            raise MARequestException(f"Error during request write: {ex}") from ex
+        except TimeoutError as ex:
+            self._response_future = None
+            raise MATimeoutException("Timeout during request write") from ex
 
         try:
             response_bytes = await asyncio.wait_for(self._response_future, self._response_timeout)
