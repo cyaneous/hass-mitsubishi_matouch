@@ -470,7 +470,7 @@ class Thermostat:
             MATimeoutException: If the command times out.
         """
 
-        _LOGGER.debug("[%s] _async_write_request() called", self._mac_address)
+        _LOGGER.debug("[%s] _async_write_request() called with request: %s", self._mac_address, type(request).__name__)
 
         if not self.is_connected:
             raise MAStateException("Cannot write request - not connected")
