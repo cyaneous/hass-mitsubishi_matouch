@@ -68,6 +68,7 @@ class MAVaneMode(EnumBase):
 
 class _MACharacteristic(StrEnum):
     """Characteristics enumeration."""
+    
     FIRMWARE_VERSION = "799e3b22-e797-11e6-bf01-fe55135034f3"
     SOFTWARE_VERSION = "def9382a-e795-11e6-bf01-fe55135034f3"
     WRITE = "e48c1528-e795-11e6-bf01-fe55135034f3"
