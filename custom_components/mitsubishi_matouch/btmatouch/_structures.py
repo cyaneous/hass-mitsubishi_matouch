@@ -71,7 +71,7 @@ class _MARequest(_MAStruct):
     """Request."""
 
     message_type: _MAMessageType = csfield(TEnum(Int16un, _MAMessageType))
-    request_flag: int = csfield(Int8un) # request flag?
+    request_flag: int = csfield(Int8un) # short request flag? commands are 0x01, status request is 0x00
 
 
 @dataclass
