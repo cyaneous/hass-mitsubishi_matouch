@@ -23,8 +23,9 @@ from ._structures import (
     _MAControlResponse,
 )
 from .const import (
-    DEFAULT_COMMAND_TIMEOUT,
     DEFAULT_CONNECTION_TIMEOUT,
+    DEFAULT_COMMAND_TIMEOUT,
+    DEFAULT_RESPONSE_TIMEOUT,
     MAOperationMode,
     _MACharacteristic,
     _MAMessageType,
@@ -59,6 +60,7 @@ class Thermostat:
         ble_device: BLEDevice,
         connection_timeout: int = DEFAULT_CONNECTION_TIMEOUT,
         command_timeout: int = DEFAULT_COMMAND_TIMEOUT,
+        response_timeout: int = DEFAULT_RESPONSE_TIMEOUT,
     ):
         """Initialize the thermostat.
 
@@ -69,6 +71,7 @@ class Thermostat:
             pin (int): The PIN for accessing the thermostat (hex representation).
             connection_timeout (int, optional): The connection timeout in seconds. Defaults to DEFAULT_CONNECTION_TIMEOUT.
             command_timeout (int, optional): The command timeout in seconds. Defaults to DEFAULT_COMMAND_TIMEOUT.
+            response_timeout (int, optional): The response waiting timeout in seconds. Defaults to DEFAULT_RESPONSE_TIMEOUT.
         """
 
         self._mac_address = ble_device.address
@@ -76,6 +79,7 @@ class Thermostat:
         self._ble_device = ble_device
         self._connection_timeout = connection_timeout
         self._command_timeout = command_timeout
+        self._response_timeout = response_timeout
 
         self._firmware_version: str | None = None
         self._software_version: str | None = None
@@ -509,7 +513,7 @@ class Thermostat:
                 raise MATimeoutException("Timeout during request write") from ex
 
         try:
-            response_bytes = await asyncio.wait_for(self._response_future, self._command_timeout)
+            response_bytes = await asyncio.wait_for(self._response_future, self._response_timeout)
             response_header = _MAResponse.from_bytes(response_bytes)
             if response_header.message_type != request.message_type & 0xff:
                 raise MAResponseException(f"Incorrect response message type received: {response_header.message_type}")

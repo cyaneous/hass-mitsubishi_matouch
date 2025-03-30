@@ -27,6 +27,9 @@ DEFAULT_CONNECTION_TIMEOUT = 20
 """The default command timeout in seconds."""
 DEFAULT_COMMAND_TIMEOUT = 5
 
+"""The default response wait timeout in seconds."""
+DEFAULT_RESPONSE_TIMEOUT = 5
+
 
 class MAOperationMode(IntEnum):
     """Operation mode enumeration."""
