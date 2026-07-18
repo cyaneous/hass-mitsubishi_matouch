@@ -358,13 +358,6 @@ This integration is built to be left running 24/7 across flaky radios:
 - **`Active proxy` / `Signal strength` show *unknown*** → expected briefly while a
   thermostat is disconnected; they populate again on the next successful connect.
 
-## Brand icon
-
-Logos/icons ship in `custom_components/mitsubishi_matouch/brand/`. For them to
-appear in the Home Assistant UI they must be submitted to the
-[home-assistant/brands](https://github.com/home-assistant/brands) repository under
-`custom_integrations/mitsubishi_matouch/`.
-
 ## Credits
 
 This is a hardened fork of
