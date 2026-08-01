@@ -4,6 +4,14 @@ This is a hardened fork of [cyaneous/hass-mitsubishi_matouch](https://github.com
 focused on running several MA Touch (PAR-CT01MAU) thermostats reliably over ESP32
 Bluetooth proxies, 24/7.
 
+## 0.14.41
+
+- **Discover renamed MA Touch controllers.** The controller advertises only its
+  user-configurable local name (not manufacturer data or its GATT service UUID).
+  Discovery now triggers for the observed MA Touch `M/R_` name prefix and
+  accepts candidates only when they also use the `58:52:8A` Bluetooth address
+  block, while retaining the factory-name (`CT01MA`) match.
+
 ## 0.14.40
 
 - **Surface multi-split mode conflict.** On a multi-split the shared outdoor unit runs

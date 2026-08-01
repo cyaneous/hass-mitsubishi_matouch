@@ -22,9 +22,14 @@ from .btmatouch.capabilities import (
 DOMAIN = "mitsubishi_matouch"
 
 SUBENTRY_TYPE_THERMOSTAT = "thermostat"
-# Units advertise as "M/R_CT01MAU_<machex>" (and "M/R_CT01MA_<machex>" on some),
-# so match the "CT01MA" model designation as a substring, not a strict prefix.
+# Factory-named units advertise as "M/R_CT01MAU_<machex>" (and
+# "M/R_CT01MA_<machex>" on some), so match the model designation as a substring.
 MA_TOUCH_NAME_MATCH = "CT01MA"
+# A controller's advertised name is user-configurable. Observed MA Touch controllers
+# retain the M/R_ prefix and use Mitsubishi's 58:52:8A Bluetooth address block, which
+# provides a narrow, name-independent discovery hint for renamed controllers.
+MA_TOUCH_RENAMED_NAME_PREFIX = "M/R_"
+MA_TOUCH_BLUETOOTH_PREFIX = "58:52:8A:"
 # Note: this is a GATT service, NOT advertised — kept only as a secondary hint.
 MA_TOUCH_SERVICE_UUID = "0277df18-e796-11e6-bf01-fe55135034f3"
 

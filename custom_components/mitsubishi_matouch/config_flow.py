@@ -41,7 +41,9 @@ from .const import (
     DEFAULT_PREFER_PROXY,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    MA_TOUCH_BLUETOOTH_PREFIX,
     MA_TOUCH_NAME_MATCH,
+    MA_TOUCH_RENAMED_NAME_PREFIX,
     MA_TOUCH_SERVICE_UUID,
     SUBENTRY_TYPE_THERMOSTAT,
 )
@@ -55,14 +57,24 @@ _DISCOVERY_DELAY = 2.0
 def _is_matouch(info: BluetoothServiceInfoBleak) -> bool:
     """Return whether an advertised device looks like an MA Touch controller.
 
-    Matches the "CT01MA" model substring in the advertised name (real names look
-    like "M/R_CT01MAU_<machex>" / "M/R_CT01MA_<machex>"). The service UUID is
-    GATT-only (not advertised), so it's only a secondary hint.
+    Matches the "CT01MA" model substring in factory names (for example,
+    "M/R_CT01MAU_<machex>"). Since a controller's advertised name is configurable,
+    also recognizes the observed MA Touch M/R_ name prefix paired with its 58:52:8A
+    Bluetooth address block. The service UUID is GATT-only (not advertised), so it
+    is only a secondary hint.
     """
 
     if MA_TOUCH_SERVICE_UUID in (info.service_uuids or []):
         return True
-    return MA_TOUCH_NAME_MATCH in (info.name or "").upper()
+
+    name = (info.name or "").upper()
+    if MA_TOUCH_NAME_MATCH in name:
+        return True
+
+    return (
+        name.startswith(MA_TOUCH_RENAMED_NAME_PREFIX)
+        and info.address.upper().startswith(MA_TOUCH_BLUETOOTH_PREFIX)
+    )
 
 
 def _valid_pin(pin: str) -> bool:

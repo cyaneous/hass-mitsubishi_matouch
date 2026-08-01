@@ -7,7 +7,7 @@
       "connectable": true
     },
     {
-      "local_name": "M/R_CT01MA*",
+      "local_name": "M/R_*",
       "connectable": true
     }
   ],
@@ -20,5 +20,5 @@
   "issue_tracker": "https://github.com/cyaneous/hass-mitsubishi_matouch/issues",
   "loggers": ["mitsubishi_matouch"],
   "requirements": ["construct>=2.10.68", "construct-typing>=0.6.2"],
-  "version": "0.14.40"
+  "version": "0.14.41"
 }
