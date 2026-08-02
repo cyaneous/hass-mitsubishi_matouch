@@ -217,8 +217,9 @@ discovered **Mitsubishi MA Touch** card automatically; otherwise go to
 
 1. **Searching** — the flow shows a live *“Searching for MA Touch thermostats…”*
    spinner and **advances the moment any are found** (no dead-end “none found”
-   abort; if a unit needs a moment to appear it just shows up). If nothing turns
-   up after a sweep, you get a one-click **Search again**.
+   abort; if a unit needs a moment to appear it just shows up). Factory names and
+   renamed controllers that retain the `M/R_` prefix are recognized. If nothing
+   turns up after a sweep, you get a one-click **Search again**.
 2. **Pick** — tick the thermostats to add; you can add several in one pass.
    Already-configured ones are filtered out.
 3. **Name + PIN** — give each selected thermostat a name and enter its PIN.
