@@ -4,6 +4,13 @@ This is a hardened fork of [cyaneous/hass-mitsubishi_matouch](https://github.com
 focused on running several MA Touch (PAR-CT01MAU) thermostats reliably over ESP32
 Bluetooth proxies, 24/7.
 
+## 0.14.42
+
+- **Discover renamed TAR-CT01MAU controllers.** A renamed controller (`M/R_<name>`)
+  was accepted only at a `58:52:8A` address. The TAR-CT01MAU-SB, the PAR-CT01MAU-SB
+  as sold by Trane, uses Mitsubishi Electric's `28:E9:8E` block, so a renamed one was
+  never found. Discovery now accepts the `M/R_` prefix in both blocks.
+
 ## 0.14.41
 
 - **Discover renamed MA Touch controllers.** The controller advertises only its
