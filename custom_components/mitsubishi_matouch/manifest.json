@@ -19,6 +19,6 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/cyaneous/hass-mitsubishi_matouch/issues",
   "loggers": ["mitsubishi_matouch"],
-  "requirements": ["construct>=2.10.68", "construct-typing>=0.6.2"],
-  "version": "0.14.42"
+  "requirements": ["construct>=2.10.68", "construct-typing>=0.8.1"],
+  "version": "0.14.43"
 }

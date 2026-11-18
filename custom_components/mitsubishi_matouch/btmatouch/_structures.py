@@ -5,7 +5,6 @@ from typing import Self
 
 from construct import (
     Bytes,
-    Const,
     Flag,
     Int8un,
     Int16un,
@@ -16,6 +15,7 @@ from construct_typed import (
     TEnum,
     TFlagsEnum,
     csfield,
+    csfield_const,
 )
 
 from ._adapters import (
@@ -91,9 +91,9 @@ class _MAAuthenticatedRequest(_MARequest):
     """Authenticated request with a PIN."""
 
     pin: int = csfield(Int16un)
-    unknown_1: int = csfield(Const(0x00, Int8un))
-    unknown_2: int = csfield(Const(0x00, Int8un))
-    unknown_3: int = csfield(Const(0x00, Int8un))
+    unknown_1: int = csfield_const(Int8un, 0x00)
+    unknown_2: int = csfield_const(Int8un, 0x00)
+    unknown_3: int = csfield_const(Int8un, 0x00)
 
 
 @dataclass

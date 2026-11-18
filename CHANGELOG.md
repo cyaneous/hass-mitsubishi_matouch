@@ -4,6 +4,20 @@ This is a hardened fork of [cyaneous/hass-mitsubishi_matouch](https://github.com
 focused on running several MA Touch (PAR-CT01MAU) thermostats reliably over ESP32
 Bluetooth proxies, 24/7.
 
+## 0.14.43
+
+- **Fix the empty "Created configuration for ." dialog.** When a controller was
+  already visible, the search task finished as soon as it was created, and the first
+  setup step returned "progress done". Home Assistant does not advance that result
+  from a flow's first step, and the frontend showed it as an empty success dialog
+  with nothing set up. Setup now goes straight to the thermostat list when a
+  controller is already visible, and shows the search spinner only otherwise. This
+  also fixes **Search again** failing when a controller had appeared.
+- **Load with construct-typing 0.8.** construct-typing 0.8 rejects `csfield(Const(...))`,
+  so the integration failed to import on a fresh install. The constant bytes of the
+  authenticated request now use `csfield_const`, and the manifest requires
+  `construct-typing>=0.8.1`.
+
 ## 0.14.42
 
 - **Discover renamed TAR-CT01MAU controllers.** A renamed controller (`M/R_<name>`)

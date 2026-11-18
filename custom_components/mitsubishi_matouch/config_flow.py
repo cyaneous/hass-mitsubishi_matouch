@@ -70,16 +70,30 @@ def _device_options(devices: dict[str, BluetoothServiceInfoBleak]) -> list[Selec
     ]
 
 
-async def _collect_matouch(hass, found: dict[str, BluetoothServiceInfoBleak], exclude: set[str]) -> None:
-    """Poll discovery until at least one (new) MA Touch device is found, or timeout."""
+def _add_visible_matouch(
+    hass, found: dict[str, BluetoothServiceInfoBleak], exclude: set[str]
+) -> None:
+    """Add the MA Touch devices Home Assistant currently sees to `found`."""
+
+    for info in async_discovered_service_info(hass, connectable=True):
+        if info.address not in exclude and _is_matouch(info):
+            found[info.address] = info
+
+
+async def _wait_for_matouch(
+    hass, found: dict[str, BluetoothServiceInfoBleak], exclude: set[str]
+) -> None:
+    """Poll discovery until at least one (new) MA Touch device is found, or timeout.
+
+    Sleeps before each scan. Home Assistant starts tasks eagerly, so the task stays
+    pending when it is created and the flow shows its progress step.
+    """
 
     for _ in range(_DISCOVERY_ROUNDS):
-        for info in async_discovered_service_info(hass, connectable=True):
-            if info.address not in exclude and _is_matouch(info):
-                found[info.address] = info
+        await asyncio.sleep(_DISCOVERY_DELAY)
+        _add_visible_matouch(hass, found, exclude)
         if found:
             return
-        await asyncio.sleep(_DISCOVERY_DELAY)
 
 
 class MAConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -120,14 +134,22 @@ class MAConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Auto-search for thermostats with a live progress spinner."""
+        """Pick from the thermostats already visible, or search with a progress spinner.
+
+        A progress step must be shown before `async_show_progress_done`. Home Assistant
+        does not advance a progress-done result returned by the first step of a flow,
+        and the frontend shows it as an empty "Created configuration" dialog.
+        """
 
         await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         if self._discover_task is None:
+            _add_visible_matouch(self.hass, self._discovered, set())
+            if self._discovered:
+                return await self.async_step_pick()
             self._discover_task = self.hass.async_create_task(
-                _collect_matouch(self.hass, self._discovered, set())
+                _wait_for_matouch(self.hass, self._discovered, set())
             )
 
         if not self._discover_task.done():
@@ -246,9 +268,7 @@ class ThermostatSubentryFlowHandler(ConfigSubentryFlow):
 
         entry = self._get_entry()
         existing = {se.data.get(CONF_ADDRESS) for se in entry.subentries.values()}
-        for info in async_discovered_service_info(self.hass, connectable=True):
-            if info.address not in existing and _is_matouch(info):
-                self._discovered[info.address] = info
+        _add_visible_matouch(self.hass, self._discovered, existing)
 
         errors: dict[str, str] = {}
         if user_input is not None and self._discovered:
